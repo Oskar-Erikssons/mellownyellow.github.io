@@ -1,9 +1,9 @@
 [
   {
-    "name": "Blizzard WoW-nyheter",
-    "url": "https://worldofwarcraft.blizzard.com/en-us/news",
+    "name": "Blizzard: Hotfixar för WoW: Forever",
+    "url": "https://worldofwarcraft.blizzard.com/en-gb/news/24307310",
     "type": "html",
-    "note": "Kontrollera adressen. Blizzard publicerar hotfixar som nyhetsinlägg."
+    "note": "Officiell hotfix-artikel. Blizzard fyller på samma artikel, så verktyget läser om den när texten ändras."
   },
   {
     "name": "Wowhead nyheter (RSS)",
