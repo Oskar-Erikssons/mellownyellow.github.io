@@ -5,7 +5,6 @@ local _, FG = ...
 local Sim = {}
 FG.Sim = Sim
 
-local GCD = 1.5
 local SPELL_SCHOOLS = { 2, 3, 4, 5, 6, 7 } -- holy, fire, nature, frost, shadow, arcane
 local STAT_KEYS = { "str", "agi", "sta", "int", "spi" }
 
@@ -155,12 +154,9 @@ function Sim:ReadSpells()
     return list
 end
 
--- 1.12 rules: base spell miss vs. equal level 4%, +1% per level up to +2, then +11% at +3.
-local SPELL_MISS = { [0] = 4, 5, 6, 17 }
--- Melee miss vs. equal level 5%, roughly +0.5% per level (+1% at +3 for weapon skill gap).
-local MELEE_MISS = { [0] = 5, 5.5, 6, 8 }
-local GLANCE_CHANCE = { [0] = 0.1, 0.2, 0.3, 0.4 }
-local GLANCE_MULT = { [0] = 0.95, 0.95, 0.85, 0.65 }
+-- Combat rules come from GameData.lua (built from data/gamedata.json). Lua tables are 1-based,
+-- so a target "diff" levels above you is entry diff + 1.
+local function rule(name, diff) return FG.Data.combat[name][diff + 1] end
 
 function Sim:SpellResult(spell, s, extraSP, extraCrit)
     local settings = FG.settings
@@ -168,12 +164,13 @@ function Sim:SpellResult(spell, s, extraSP, extraCrit)
     local sp = spell.kind == "heal" and (s.healing or 0) or (s.sp or 0)
     sp = sp + (extraSP or 0)
     local crit = ((s.spellCrit or 0) + (extraCrit or 0)) / 100
-    local hit = spell.kind == "heal" and 1 or math.min(0.99, 1 - math.max(1, SPELL_MISS[diff] - (s.spellHit or 0)) / 100)
+    local hit = spell.kind == "heal" and 1 or math.min(0.99, 1 - math.max(1, rule("spellMiss", diff) - (s.spellHit or 0)) / 100)
 
-    local cast = math.max(spell.cast, GCD)
+    local C = FG.Data.combat
+    local cast = math.max(spell.cast, C.gcd)
     -- Spell power coefficient: cast time / 3.5 for direct, duration / 15 for over-time.
     local direct = (spell.min + spell.max) / 2
-    local coefDirect = math.min(1, math.max(spell.cast, GCD) / 3.5)
+    local coefDirect = math.min(1, math.max(spell.cast, C.gcd) / 3.5)
     local coefDot = math.min(1, (spell.dur or 0) / 15)
     if direct > 0 and spell.dot > 0 then
         -- Hybrid spells split the coefficient.
@@ -182,7 +179,7 @@ function Sim:SpellResult(spell, s, extraSP, extraCrit)
     if settings.tooltipIncludesSP then coefDirect, coefDot = 0, 0 end
 
     local perCast = 0
-    if direct > 0 then perCast = (direct + sp * coefDirect) * (1 + crit * 0.5) end
+    if direct > 0 then perCast = (direct + sp * coefDirect) * (1 + crit * (C.spellCritMult - 1)) end
     if spell.dot > 0 then perCast = perCast + spell.dot + sp * coefDot end
     perCast = perCast * hit
 
@@ -198,18 +195,19 @@ end
 function Sim:MeleeDPS(s, extraAP, extraCrit, extraHit)
     if not s.mh then return 0 end
     local diff = FG.settings.targetLevelDiff or 0
-    local apBonus = (extraAP or 0) / 14
+    local C = FG.Data.combat
+    local apBonus = (extraAP or 0) / C.apPerDps
     local crit = ((s.crit or 0) + (extraCrit or 0)) / 100
-    local missBase = MELEE_MISS[diff] + (s.oh and 19 or 0)
+    local missBase = rule("meleeMiss", diff) + (s.oh and C.dualWieldMiss or 0)
     local miss = math.max(0, missBase - (s.hit or 0) - (extraHit or 0)) / 100
     local dodge = (5 + diff * 0.5) / 100
     -- Glancing blows: rough 1.12 values, 10% of white hits at equal level up to 40% vs. bosses.
-    local glanceChance = GLANCE_CHANCE[diff]
-    local glanceMult = GLANCE_MULT[diff]
+    local glanceChance = rule("glanceChance", diff)
+    local glanceMult = rule("glanceMult", diff)
     local landed = math.max(0, 1 - miss - dodge - glanceChance)
     crit = math.min(crit, landed)
     -- One attack table roll: normal hit, crit (x2) or glancing blow.
-    local tableMult = (landed - crit) + 2 * crit + glanceChance * glanceMult
+    local tableMult = (landed - crit) + C.meleeCritMult * crit + glanceChance * glanceMult
 
     local function hand(h, mult)
         if not h then return 0 end

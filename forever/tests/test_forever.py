@@ -4,6 +4,7 @@ Run from the forever/ folder:  python -m unittest discover tests
 The Lua tests need `pip install lupa` (an embedded Lua runtime).
 """
 
+import json
 import shutil
 import sys
 import tempfile
@@ -159,6 +160,11 @@ DEFAULT_CHAT_FRAME = { AddMessage = function() end }
 SlashCmdList = {}
 UISpecialFrames = {}
 function strsplit(sep, s) local t = {}; for p in (s .. sep):gmatch("(.-)" .. sep) do t[#t + 1] = p end; return unpack(t) end
+function UnitName() return "Oskar" end
+function issecretvalue() return false end
+C_VoiceChat = { GetTtsVoices = function() return {
+    { voiceID = 0, name = "Microsoft David" }, { voiceID = 1, name = "Microsoft Zira" },
+    { voiceID = 2, name = "Microsoft Mark" }, { voiceID = 3, name = "Microsoft Hazel" } } end }
 function strtrim(s) return (s:gsub("^%s+", ""):gsub("%s+$", "")) end
 unpack = unpack or table.unpack
 tinsert = table.insert
@@ -171,11 +177,11 @@ class AddonLuaTests(unittest.TestCase):
         self.lua = lupa.LuaRuntime(unpack_returned_tuples=True)
         self.lua.execute(WOW_STUBS)
         self.fg = self.lua.eval("{}")
-        for name in ("Core.lua", "Narrator.lua", "Sim.lua", "UI.lua"):
+        for name in ("Core.lua", "GameData.lua", "Theme.lua", "Narrator.lua", "Sim.lua", "Auction.lua", "UI.lua"):
             chunk = self.lua.execute("return function(src, name) return assert((loadstring or load)(src, name)) end")(
                 (ADDON / name).read_text(encoding="utf-8"), name)
             chunk("ForeverGuide", self.fg)
-        self.fg.settings = self.lua.eval("{ targetLevelDiff = 0, tooltipIncludesSP = false }")
+        self.fg.settings = self.lua.eval("{ targetLevelDiff = 0, tooltipIncludesSP = false, theme = 'orgrimmar', voiceVariety = true }")
 
     def test_hash_matches_python_djb2(self):
         def djb2(s):
@@ -235,6 +241,74 @@ class AddonLuaTests(unittest.TestCase):
         text = self.fg.UI.SimText(self.fg.UI, snap)
         self.assertIn("Orc Warrior, level 10", text)
         self.assertIn("Auto attack", text)
+
+
+class AuctionLuaTests(AddonLuaTests):
+    def listings(self, rows):
+        return self.lua.table_from([self.lua.table_from(r) for r in rows])
+
+    def test_market_value_ignores_overpriced_listings(self):
+        rows = [{"unit": 100, "count": 5}, {"unit": 110, "count": 5}, {"unit": 120, "count": 10},
+                {"unit": 5000, "count": 1}, {"unit": 130, "count": 20}]
+        market, low, qty, n = self.fg.Auction.Aggregate(self.listings(rows))
+        self.assertEqual((low, qty, n), (100, 41, 5))
+        self.assertTrue(100 <= market <= 120)
+        self.assertIsNone(self.fg.Auction.Aggregate(self.listings([])))
+
+    def test_sale_estimate(self):
+        prev = self.listings([{"unit": 100, "count": 1, "tl": 4, "owner": "A"}, {"unit": 100, "count": 1, "tl": 4, "owner": "A"},
+                              {"unit": 120, "count": 5, "tl": 1, "owner": "B"}, {"unit": 150, "count": 2, "tl": 3, "owner": "C"}])
+        cur = self.listings([{"unit": 100, "count": 1, "tl": 4, "owner": "A"}, {"unit": 150, "count": 2, "tl": 3, "owner": "C"}])
+        sold, total = self.fg.Auction.SaleEstimate(prev, cur)
+        # One of the two identical listings vanished (sold), the expiring one counts as half.
+        self.assertEqual((sold, total), (1.5, 4))
+
+    def test_listing_pack_round_trip(self):
+        s = "100:5:4:Bob;250:1:2:"
+        rows = self.fg.Auction.UnpackListings(s)
+        self.assertEqual(rows[1].owner, "Bob")
+        self.assertIsNone(rows[2].owner)
+        self.assertEqual(rows[2].unit, 250)
+
+    def test_decide_matches_web_cases(self):
+        cases = json.loads((ROOT / "tests" / "ah_cases.json").read_text(encoding="utf-8"))
+        for c in cases:
+            d = self.fg.Auction.Decide(self.lua.table_from(c["item"]), c["house"])
+            self.assertEqual(d.action, c["action"], c["name"])
+
+    def test_money(self):
+        self.assertEqual(self.fg.Auction.Money(123456), "12g 34s 56c")
+        self.assertEqual(self.fg.Auction.Money(42), "42c")
+
+    def test_quest_keys_and_player_name(self):
+        N = self.fg.Narrator
+        self.assertEqual(N.Key("detail", "x", 176), "d176")
+        self.assertEqual(N.Key("gossip", "Hello", None), "g" + self.fg.Hash("Hello"))
+
+    def test_npc_keeps_same_voice_and_sex(self):
+        N = self.fg.Narrator
+        v1, r1 = N.PickVoice(N, 3, "Innkeeper Farley")
+        v2, r2 = N.PickVoice(N, 3, "Innkeeper Farley")
+        self.assertEqual((v1, r1), (v2, r2))
+        self.assertIn(v1, (1, 3))  # female voices only
+        self.assertTrue(-2 <= r1 <= 2)
+        males = {N.PickVoice(N, 2, name)[0] for name in ("Thrall", "Marshal Dughan", "Gryan Stoutmantle", "Hogger", "Bob")}
+        self.assertTrue(males <= {0, 2})
+
+    def test_theme_colors(self):
+        T = self.fg.Theme
+        self.assertEqual(T.Hex(T, "title"), "ffffcc59")
+        T.Set(T, "stormwind")
+        T.SetColor(T, "accent", 1, 0, 0)
+        self.assertEqual(T.Hex(T, "accent"), "ffff0000")
+        T.Reset(T)
+        self.assertNotEqual(T.Hex(T, "accent"), "ffff0000")
+
+
+class GeneratedDataTests(unittest.TestCase):
+    def test_generated_files_are_current(self):
+        import build_data
+        self.assertEqual(build_data.main(["--check"]), 0)
 
 
 if __name__ == "__main__":

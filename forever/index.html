@@ -1,127 +1,254 @@
 <!DOCTYPE html>
-<html lang="sv">
+<html lang="sv" data-theme="orgrimmar">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Forever Guide</title>
-<meta name="description" content="Välj klass och ras, simulera din karaktär och få quest-texter upplästa i WoW: Forever.">
+<meta name="description" content="Välj klass och ras, simulera din karaktär, få quest-texter upplästa och sälj smartare på auktionshuset i WoW: Forever.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script>
+  // Apply the saved theme before the page paints, so it never flashes the wrong colors.
+  try {
+    const t = localStorage.getItem("fg-theme") || (matchMedia("(prefers-color-scheme: light)").matches ? "stormwind" : "orgrimmar");
+    document.documentElement.dataset.theme = t;
+    const c = JSON.parse(localStorage.getItem("fg-colors-" + t) || "{}");
+    for (const [k, v] of Object.entries(c)) document.documentElement.style.setProperty("--" + k, v);
+  } catch (e) {}
+</script>
 <style>
+  :root, [data-theme="orgrimmar"] {
+    --bg: #140f0c; --surface: #201813; --line: #4a3626; --text: #f1e8da; --muted: #b9a68c;
+    --accent: #e09a3e; --title: #ffcf6e; --good: #7fd18b; --bad: #f07a6a;
+    --alliance: #79a9ff; --horde: #ff7d6b;
+    --glow: radial-gradient(ellipse at 50% -20%, rgba(176, 52, 32, .45), transparent 65%);
+    color-scheme: dark;
+  }
+  [data-theme="stormwind"] {
+    --bg: #f5efe2; --surface: #fffaf0; --line: #d8c7a3; --text: #2b2216; --muted: #6c5d45;
+    --accent: #2457a6; --title: #1d3f78; --good: #1f7a33; --bad: #b3261e;
+    --alliance: #2457a6; --horde: #a8321f;
+    --glow: radial-gradient(ellipse at 50% -20%, rgba(36, 87, 166, .22), transparent 65%);
+    color-scheme: light;
+  }
   :root {
-    --bg: #14110d; --panel: #1f1a14; --panel-2: #2a231a; --line: #4a3c28;
-    --text: #efe6d4; --muted: #b5a68b; --gold: #e8b64c; --gold-2: #ffd27a;
-    --good: #7fd18b; --bad: #e98272; --alliance: #6fa8ff; --horde: #ff7a6b;
-    --radius: 10px;
+    --surface-2: color-mix(in srgb, var(--surface) 88%, var(--text));
+    --accent-soft: color-mix(in srgb, var(--accent) 16%, transparent);
+    --radius: 14px; --radius-sm: 8px;
+    --shadow: 0 1px 2px rgba(0,0,0,.12), 0 8px 24px rgba(0,0,0,.12);
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
-  header { padding: 32px 16px 8px; text-align: center; background: radial-gradient(ellipse at top, #3a2c16 0%, var(--bg) 70%); }
-  h1 { font-family: Georgia, "Times New Roman", serif; color: var(--gold-2); font-size: clamp(28px, 6vw, 44px); margin: 0 0 6px; letter-spacing: .5px; }
-  h2 { font-family: Georgia, serif; color: var(--gold); margin: 0 0 12px; font-size: 24px; }
-  h3 { color: var(--gold-2); margin: 18px 0 8px; font-size: 18px; }
-  header p { color: var(--muted); max-width: 640px; margin: 0 auto; }
-  nav { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; padding: 16px; position: sticky; top: 0; background: rgba(20,17,13,.95); border-bottom: 1px solid var(--line); z-index: 2; }
-  nav button { background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 999px; padding: 8px 16px; font: inherit; cursor: pointer; }
-  nav button[aria-selected="true"] { background: var(--gold); color: #241a08; border-color: var(--gold); font-weight: 600; }
-  main { max-width: 980px; margin: 0 auto; padding: 24px 16px 64px; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; animation: none !important; } }
+  body { margin: 0; background: var(--bg); background-image: var(--glow); background-repeat: no-repeat; color: var(--text);
+    font: 16px/1.6 Inter, system-ui, -apple-system, "Segoe UI", sans-serif; transition: background-color .3s, color .3s; }
+  h1, h2, .brand { font-family: Cinzel, Georgia, serif; letter-spacing: .3px; }
+  h1 { color: var(--title); font-size: clamp(30px, 6vw, 48px); margin: 0; line-height: 1.15; }
+  h2 { color: var(--title); font-size: 22px; margin: 0 0 12px; }
+  h3 { color: var(--accent); font-size: 16px; margin: 20px 0 8px; font-weight: 600; }
+  p { margin: 0 0 12px; }
+  a { color: var(--accent); }
+  .muted { color: var(--muted); } .small { font-size: 14px; } .tiny { font-size: 12.5px; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+  /* Header */
+  .top { max-width: 1080px; margin: 0 auto; padding: 16px; display: flex; align-items: center; gap: 12px; }
+  .brand { display: flex; align-items: center; gap: 10px; color: var(--title); font-weight: 700; font-size: 18px; text-decoration: none; }
+  .brand svg { width: 34px; height: 34px; }
+  .top .spacer { flex: 1; }
+  .seg { display: inline-flex; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 3px; }
+  .seg button { border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 14px; padding: 6px 12px; border-radius: 999px; cursor: pointer; }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink, #fff); font-weight: 600; }
+  .icon-btn { border: 1px solid var(--line); background: var(--surface); color: var(--text); border-radius: 999px; width: 38px; height: 38px; display: grid; place-items: center; cursor: pointer; }
+  .icon-btn svg { width: 18px; height: 18px; }
+  .hero { max-width: 1080px; margin: 0 auto; padding: 24px 16px 8px; }
+  .hero p { color: var(--muted); max-width: 640px; font-size: 17px; margin-top: 10px; }
+
+  /* Tabs */
+  nav { position: sticky; top: 0; z-index: 5; background: color-mix(in srgb, var(--bg) 90%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+  nav .inner { max-width: 1080px; margin: 0 auto; padding: 10px 16px; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+  nav button { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 7px; background: transparent; color: var(--muted); border: 1px solid transparent; border-radius: 999px; padding: 8px 14px; font: inherit; font-size: 15px; cursor: pointer; transition: background-color .2s, color .2s; }
+  nav button svg { width: 17px; height: 17px; }
+  nav button:hover { color: var(--text); background: var(--surface); }
+  nav button[aria-selected="true"] { color: var(--accent-ink, #fff); background: var(--accent); font-weight: 600; }
+
+  main { max-width: 1080px; margin: 0 auto; padding: 24px 16px 72px; }
   section[hidden] { display: none; }
-  .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
-  .muted { color: var(--muted); }
-  .small { font-size: 14px; }
-  .q { margin-bottom: 16px; }
-  .q > div:first-child { font-weight: 600; margin-bottom: 6px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; margin-bottom: 16px; box-shadow: var(--shadow); }
+  .card > :last-child { margin-bottom: 0; }
+  .lead { font-size: 15px; color: var(--muted); }
+  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+  .quick { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 18px; }
+  .quick button { text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; color: var(--text); font: inherit; cursor: pointer; transition: transform .15s, border-color .2s; }
+  .quick button:hover { transform: translateY(-2px); border-color: var(--accent); }
+  .quick b { display: block; color: var(--title); margin-bottom: 2px; }
+
+  /* Form controls */
+  .q { margin-bottom: 18px; }
+  .q > .label { font-weight: 600; margin-bottom: 8px; }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .chips label { cursor: pointer; }
   .chips input { position: absolute; opacity: 0; pointer-events: none; }
-  .chips span { display: inline-block; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel-2); }
-  .chips input:checked + span { background: var(--gold); color: #241a08; border-color: var(--gold); }
-  .chips input:focus-visible + span { outline: 2px solid var(--gold-2); outline-offset: 2px; }
-  .result { border-left: 4px solid var(--gold); padding: 12px 16px; margin: 10px 0; background: var(--panel-2); border-radius: 0 var(--radius) var(--radius) 0; }
-  .result.top { border-left-color: var(--gold-2); }
-  .tag { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); margin-left: 6px; color: var(--muted); }
-  .Alliance { color: var(--alliance); } .Horde { color: var(--horde); }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
-  .grid label { display: flex; flex-direction: column; font-size: 13px; color: var(--muted); }
-  input[type=number], input[type=text], select, textarea { background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 7px 9px; font: inherit; width: 100%; }
-  textarea { min-height: 80px; font-family: ui-monospace, Consolas, monospace; font-size: 13px; }
-  button.main { background: var(--gold); color: #241a08; border: 0; border-radius: 6px; padding: 9px 18px; font: inherit; font-weight: 600; cursor: pointer; }
-  button.ghost { background: transparent; color: var(--gold-2); border: 1px solid var(--line); border-radius: 6px; padding: 8px 14px; font: inherit; cursor: pointer; }
+  .chips span { display: inline-block; padding: 7px 13px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface-2); font-size: 14.5px; transition: background-color .15s, border-color .15s; }
+  .chips label:hover span { border-color: var(--accent); }
+  .chips input:checked + span { background: var(--accent); color: var(--accent-ink, #fff); border-color: var(--accent); font-weight: 600; }
+  .chips input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .fields label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); }
+  input[type=number], input[type=text], input[type=search], select, textarea {
+    background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 8px 10px; font: inherit; font-size: 15px; width: 100%; }
+  input[type=range] { width: 100%; accent-color: var(--accent); }
+  textarea { min-height: 84px; font-family: ui-monospace, Consolas, monospace; font-size: 13px; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: var(--accent-ink, #fff); border: 0; border-radius: var(--radius-sm); padding: 9px 18px; font: inherit; font-weight: 600; cursor: pointer; }
+  .btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--line); font-weight: 500; }
+  .btn:hover { filter: brightness(1.08); }
   .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
+  .money { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .money input { text-align: right; }
+
+  /* Results */
+  .result { border-left: 4px solid var(--accent); padding: 12px 16px; margin: 10px 0; background: var(--surface-2); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+  .result.top { border-left-color: var(--title); }
+  .tag { display: inline-block; font-size: 12px; padding: 1px 9px; border-radius: 999px; border: 1px solid var(--line); margin-left: 6px; color: var(--muted); vertical-align: 2px; }
+  .Alliance { color: var(--alliance); } .Horde { color: var(--horde); }
+  .pos { color: var(--good); } .neg { color: var(--bad); } .error { color: var(--bad); }
+  .verdict { display: flex; gap: 14px; align-items: center; padding: 16px; border-radius: var(--radius); background: var(--accent-soft); border: 1px solid var(--accent); }
+  .verdict .big { font-family: Cinzel, Georgia, serif; font-size: 24px; color: var(--title); }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-top: 12px; }
+  .stat { background: var(--surface-2); border-radius: var(--radius-sm); padding: 10px 12px; }
+  .stat .v { font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .stat .k { font-size: 12.5px; color: var(--muted); }
   .table-wrap { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; font-size: 14px; }
-  th, td { text-align: left; padding: 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
-  th { color: var(--gold); font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+  th, td { text-align: left; padding: 9px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 12.5px; text-transform: uppercase; letter-spacing: .4px; }
+  th button { all: unset; cursor: pointer; }
+  th button:focus-visible { outline: 2px solid var(--accent); }
   td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .pos { color: var(--good); } .neg { color: var(--bad); }
-  .error { color: var(--bad); }
+  tr:hover td { background: color-mix(in srgb, var(--accent) 5%, transparent); }
+  details summary { cursor: pointer; color: var(--accent); font-size: 13px; margin-top: 4px; }
+  details ul { margin: 4px 0 0; }
   code, pre { font-family: ui-monospace, Consolas, monospace; font-size: 13px; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; }
   code { padding: 1px 5px; }
   pre { padding: 12px; overflow-x: auto; }
-  ol, ul { padding-left: 22px; }
-  li { margin: 4px 0; }
-  a { color: var(--gold-2); }
-  .flow { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
-  .flow div { background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; font-size: 14px; }
-  .flow b { color: var(--gold-2); display: block; margin-bottom: 4px; }
-  details summary { cursor: pointer; color: var(--gold-2); font-size: 13px; margin-top: 4px; }
-  details ul { margin: 4px 0 0; }
+  ol, ul { padding-left: 22px; } li { margin: 4px 0; }
+  .flow { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; counter-reset: step; }
+  .flow div { background: var(--surface-2); border-radius: var(--radius-sm); padding: 14px; font-size: 14px; position: relative; }
+  .flow b { color: var(--title); display: block; margin-bottom: 4px; }
+  .drop { border: 2px dashed var(--line); border-radius: var(--radius); padding: 22px; text-align: center; color: var(--muted); transition: border-color .2s, background-color .2s; }
+  .drop.over { border-color: var(--accent); background: var(--accent-soft); }
+  .bars { display: grid; grid-template-columns: repeat(24, 1fr); gap: 3px; align-items: end; height: 110px; margin-top: 10px; }
+  .bars div { background: var(--accent); border-radius: 3px 3px 0 0; min-height: 2px; opacity: .85; }
+  .bars div.best { background: var(--title); opacity: 1; }
+  .bar-labels { display: grid; grid-template-columns: repeat(24, 1fr); gap: 3px; font-size: 10.5px; color: var(--muted); text-align: center; }
+  .timeline { border-left: 2px solid var(--line); margin-left: 6px; padding-left: 18px; }
+  .timeline .entry { position: relative; margin-bottom: 18px; }
+  .timeline .entry::before { content: ""; position: absolute; left: -25px; top: 6px; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); }
+
+  /* Color drawer */
+  .drawer { position: fixed; inset: 0 0 0 auto; width: min(360px, 100%); background: var(--surface); border-left: 1px solid var(--line); box-shadow: var(--shadow); z-index: 20; padding: 20px; overflow-y: auto; transform: translateX(100%); transition: transform .25s ease; }
+  .drawer.open { transform: none; }
+  .scrim { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 19; opacity: 0; pointer-events: none; transition: opacity .25s; }
+  .scrim.open { opacity: 1; pointer-events: auto; }
+  .swatches { display: grid; gap: 10px; margin: 14px 0; }
+  .swatches label { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--surface-2); padding: 8px 12px; border-radius: var(--radius-sm); }
+  .swatches input[type=color] { width: 44px; height: 30px; border: 1px solid var(--line); border-radius: 6px; background: none; padding: 0; cursor: pointer; }
+  .presets { display: flex; flex-wrap: wrap; gap: 8px; }
+  .presets button { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--line); cursor: pointer; }
+  footer { text-align: center; color: var(--muted); font-size: 13px; padding: 28px 16px; border-top: 1px solid var(--line); }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
   @media (max-width: 600px) {
-    nav { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; padding: 10px 16px; }
-    nav button { flex: 0 0 auto; }
+    .top { flex-wrap: wrap; }
+    .card { padding: 16px; }
+    .hide-sm { display: none; }
   }
-  footer { text-align: center; color: var(--muted); font-size: 13px; padding: 24px 16px; }
 </style>
 </head>
 <body>
-<header>
-  <h1>Forever Guide</h1>
-  <p>Välj klass och ras, simulera din karaktär och låt quest-texterna läsas upp när du utforskar Azeroth i <strong>World of Warcraft: Forever</strong>.</p>
-</header>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.5 8.5l-2 5-5 2 2-5z" fill="currentColor"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-voice" viewBox="0 0 24 24"><path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-coin" viewBox="0 0 24 24"><ellipse cx="12" cy="7" rx="8" ry="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 7v5c0 1.7 3.6 3 8 3s8-1.3 8-3V7M4 12v5c0 1.7 3.6 3 8 3s8-1.3 8-3v-5" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24"><path d="M3 7l9-4 9 4-9 4zM3 7v10l9 4 9-4V7M12 11v10" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5L18 18M18 6l-2.5 2.5M8.5 15.5L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-palette" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.5-.8 1.5-1.6 0-1.4-1.3-1.6-1.3-2.9 0-.9.7-1.5 1.6-1.5H16a5 5 0 0 0 5-5c0-3.9-4-7-9-7z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="7.5" cy="11" r="1.4" fill="currentColor"/><circle cx="11" cy="7.5" r="1.4" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1.4" fill="currentColor"/></symbol>
+</svg>
 
-<nav role="tablist">
-  <button role="tab" data-tab="advisor" aria-selected="true">Välj klass & ras</button>
-  <button role="tab" data-tab="sim">Simulator</button>
-  <button role="tab" data-tab="voice">Uppläsning</button>
-  <button role="tab" data-tab="install">Installera</button>
-  <button role="tab" data-tab="ideas">Fler idéer</button>
-</nav>
+<div class="top">
+  <a class="brand" href="#" aria-label="Forever Guide">
+    <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 3l14 6v10c0 9-6 15-14 18C12 34 6 28 6 19V9z" fill="var(--accent)"/><path d="M20 10l3.2 6.5 7 1-5.1 5 1.2 7-6.3-3.3-6.3 3.3 1.2-7-5.1-5 7-1z" fill="var(--bg)"/></svg>
+    <span>Forever Guide</span>
+  </a>
+  <div class="spacer"></div>
+  <div class="seg" role="group" aria-label="Tema">
+    <button type="button" data-set-theme="orgrimmar">Orgrimmar</button>
+    <button type="button" data-set-theme="stormwind">Stormwind</button>
+  </div>
+  <button class="icon-btn" id="open-colors" type="button" aria-label="Anpassa färger" title="Anpassa färger"><svg><use href="#i-palette"/></svg></button>
+</div>
+
+<div class="hero">
+  <h1>Din följeslagare i Azeroth</h1>
+  <p>Välj klass och ras, simulera karaktären, låt quest-texterna läsas upp och sälj smartare på auktionshuset i <strong>World of Warcraft: Forever</strong>.</p>
+  <div class="quick">
+    <button type="button" data-go="advisor"><b>Välj klass och ras</b><span class="muted small">Sju frågor ger förslag med racials.</span></button>
+    <button type="button" data-go="auction"><b>Sälj smartare</b><span class="muted small">Handlare eller AH? Räkna ut det direkt.</span></button>
+    <button type="button" data-go="voice"><b>Hör äventyret</b><span class="muted small">Quest-texter med egna röster per NPC.</span></button>
+  </div>
+</div>
+
+<nav aria-label="Avsnitt"><div class="inner" role="tablist">
+  <button role="tab" data-tab="advisor" aria-selected="true"><svg><use href="#i-compass"/></svg>Klass & ras</button>
+  <button role="tab" data-tab="sim" aria-selected="false"><svg><use href="#i-chart"/></svg>Simulator</button>
+  <button role="tab" data-tab="auction" aria-selected="false"><svg><use href="#i-coin"/></svg>Auktionshus</button>
+  <button role="tab" data-tab="voice" aria-selected="false"><svg><use href="#i-voice"/></svg>Uppläsning</button>
+  <button role="tab" data-tab="updates" aria-selected="false"><svg><use href="#i-refresh"/></svg>Uppdateringar</button>
+  <button role="tab" data-tab="install" aria-selected="false"><svg><use href="#i-box"/></svg>Installera</button>
+  <button role="tab" data-tab="ideas" aria-selected="false"><svg><use href="#i-spark"/></svg>Nästa steg</button>
+</div></nav>
 
 <main>
 <!-- ============ Advisor ============ -->
-<section id="advisor">
-  <div class="card">
-    <h2>Vilken klass och ras passar dig?</h2>
-    <p class="muted small">Svara på frågorna. Förslagen bygger på klassernas styrkor och rasernas egenskaper (racials) som de var 2004.</p>
-    <form id="advisor-form">
-      <div class="q"><div>Vilken roll vill du ha i en grupp?</div><div class="chips" data-name="role"></div></div>
-      <div class="q"><div>Hur vill du slåss?</div><div class="chips" data-name="style"></div></div>
-      <div class="q"><div>Hur viktigt är det att kunna levla ensam?</div><div class="chips" data-name="solo"></div></div>
-      <div class="q"><div>Vad lockar mest?</div><div class="chips" data-name="focus"></div></div>
-      <div class="q"><div>Hur avancerat får det vara?</div><div class="chips" data-name="ease"></div></div>
-      <div class="q"><div>Fraktion</div><div class="chips" data-name="faction"></div></div>
-      <div class="q"><div>Ska du spela Hardcore (en enda chans)?</div><div class="chips" data-name="hardcore"></div></div>
-    </form>
+<section id="advisor" role="tabpanel">
+  <div class="grid-2">
+    <div class="card">
+      <h2>Vilken klass passar dig?</h2>
+      <p class="lead">Förslagen bygger på klassernas styrkor och rasernas egenskaper som de var 2004. Resultatet uppdateras direkt.</p>
+      <form id="advisor-form">
+        <div class="q"><div class="label">Vilken roll vill du ha i en grupp?</div><div class="chips" data-name="role"></div></div>
+        <div class="q"><div class="label">Hur vill du slåss?</div><div class="chips" data-name="style"></div></div>
+        <div class="q"><div class="label">Hur viktigt är det att kunna levla ensam?</div><div class="chips" data-name="solo"></div></div>
+        <div class="q"><div class="label">Vad lockar mest?</div><div class="chips" data-name="focus"></div></div>
+        <div class="q"><div class="label">Hur avancerat får det vara?</div><div class="chips" data-name="ease"></div></div>
+        <div class="q"><div class="label">Fraktion</div><div class="chips" data-name="faction"></div></div>
+        <div class="q"><div class="label">Ska du spela Hardcore (en enda chans)?</div><div class="chips" data-name="hardcore"></div></div>
+      </form>
+    </div>
+    <div id="advisor-result" aria-live="polite"></div>
   </div>
-  <div id="advisor-result"></div>
 </section>
 
 <!-- ============ Simulator ============ -->
-<section id="sim" hidden>
+<section id="sim" role="tabpanel" hidden>
   <div class="card">
     <h2>Simulera din karaktär</h2>
-    <p class="muted small">Skriv <code>/fg export</code> i spelet, kopiera texten och klistra in den här. Du kan också fylla i värdena själv.</p>
-    <textarea id="import" placeholder="FG1&class=MAGE&race=Gnome&lvl=20&..."></textarea>
+    <p class="lead">Skriv <code>/fg export</code> i spelet, kopiera texten och klistra in den här. Du kan också fylla i värdena själv.</p>
+    <textarea id="import" placeholder="FG1&class=MAGE&race=Gnome&lvl=20&..." aria-label="Exporttext från spelet"></textarea>
     <div class="row">
-      <button class="main" id="do-import" type="button">Läs in</button>
-      <button class="ghost" type="button" data-demo="mage">Exempel: gnommagiker nivå 20</button>
-      <button class="ghost" type="button" data-demo="warrior">Exempel: människokrigare nivå 60</button>
-      <span id="import-msg" class="small"></span>
+      <button class="btn" id="do-import" type="button">Läs in</button>
+      <button class="btn ghost" type="button" data-demo="mage">Exempel: gnommagiker nivå 20</button>
+      <button class="btn ghost" type="button" data-demo="warrior">Exempel: människokrigare nivå 60</button>
+      <span id="import-msg" class="small" aria-live="polite"></span>
     </div>
   </div>
-
   <div class="card">
-    <h3 style="margin-top:0">Din karaktär</h3>
-    <div class="grid" id="stats"></div>
-    <div class="grid" style="margin-top:10px">
+    <h2>Din karaktär</h2>
+    <div class="fields" id="stats"></div>
+    <h3>Situation</h3>
+    <div class="fields">
       <label>Fiendens nivå<select id="targetDiff">
         <option value="0">Samma som du</option><option value="1">+1</option><option value="2">+2</option><option value="3">+3 (boss)</option>
       </select></label>
@@ -133,114 +260,281 @@
       </select></label>
       <label>Tooltips innehåller spell power<select id="tooltipSP"><option value="0">Nej (som 2004)</option><option value="1">Ja</option></select></label>
     </div>
-    <div class="row"><button class="main" id="run" type="button">Simulera</button></div>
+    <div class="row"><button class="btn" id="run" type="button">Simulera</button></div>
   </div>
-  <div id="sim-result"></div>
+  <div id="sim-result" aria-live="polite"></div>
+</section>
+
+<!-- ============ Auction ============ -->
+<section id="auction" role="tabpanel" hidden>
+  <div class="grid-2">
+    <div class="card">
+      <h2>Handlare eller auktionshus?</h2>
+      <p class="lead">Räknar med AH-avgiften, chansen att det säljs och depositionen du förlorar varje gång det inte säljs. Du lägger upp upp till tre gånger. Säljs det ändå inte, går det till handlaren.</p>
+      <div class="fields">
+        <label>Handlarens pris (guld, silver, koppar)<span class="money"><input type="number" min="0" id="c-vg" aria-label="Guld"><input type="number" min="0" id="c-vs" value="1" aria-label="Silver"><input type="number" min="0" id="c-vc" value="20" aria-label="Koppar"></span></label>
+        <label>Pris på AH per styck<span class="money"><input type="number" min="0" id="c-mg" aria-label="Guld"><input type="number" min="0" id="c-ms" value="18" aria-label="Silver"><input type="number" min="0" id="c-mc" aria-label="Koppar"></span></label>
+        <label>Antal<input type="number" min="1" id="c-count" value="5"></label>
+        <label>Auktionshus<select id="c-house"><option value="faction">Din fraktion (5 %)</option><option value="neutral">Neutralt (15 %)</option></select></label>
+        <label>Längd<select id="c-duration"><option value="2">2 timmar</option><option value="8">8 timmar</option><option value="24" selected>24 timmar</option></select></label>
+        <label>Chans att det säljs: <strong id="c-sr-out">40 %</strong><input type="range" id="c-sr" min="0" max="100" value="40"></label>
+      </div>
+      <div id="calc-result" style="margin-top:16px" aria-live="polite"></div>
+    </div>
+    <div class="card">
+      <h2>Dina priser från spelet</h2>
+      <p class="lead">Forever har inget öppet API för auktionshuset. Addonen samlar därför priser när du skannar och söker. Kör <code>forever_ah.py</code> och öppna filen här.</p>
+      <div class="drop" id="drop">
+        <p><strong>Släpp prices.json här</strong></p>
+        <div class="row" style="justify-content:center">
+          <label class="btn ghost" for="prices-file" style="cursor:pointer">Välj fil</label>
+          <input id="prices-file" type="file" accept=".json,application/json" class="sr-only">
+          <button class="btn ghost" type="button" id="demo-prices">Visa exempeldata</button>
+        </div>
+      </div>
+      <div id="ah-summary" style="margin-top:14px" aria-live="polite"></div>
+    </div>
+  </div>
+  <div id="ah-tables"></div>
 </section>
 
 <!-- ============ Voice ============ -->
-<section id="voice" hidden>
+<section id="voice" role="tabpanel" hidden>
   <div class="card">
     <h2>Quest-texter som läses upp</h2>
-    <p>Addonen läser upp quest-texter, NPC-dialog och böcker. Den har två röster:</p>
-    <ol>
-      <li><strong>Direkt röst:</strong> spelets inbyggda talsyntes. Den fungerar direkt utan installation, men låter som datorns standardröst.</li>
-      <li><strong>AI-röst med öppen källkod:</strong> klipp som du skapar på din egen dator med en modell i nivå med ElevenLabs. Varje NPC får en egen, fast röst.</li>
-    </ol>
-    <p>Addonen spelar AI-klippet om det finns. Annars använder den spelets röst och lägger texten i kö till nästa gång.</p>
-    <div class="flow">
-      <div><b>1. Spela</b>Addonen läser upp med spelets röst och sparar nya texter när du loggar ut.</div>
-      <div><b>2. Skapa röster</b>Kör <code>forever_voice.py</code>. Den gör .ogg-klipp av texterna i kön.</div>
-      <div><b>3. Starta om spelet</b>Klippen spelas nu automatiskt nästa gång du möter samma text.</div>
+    <p>Addonen läser upp quest-texter, NPC-dialog, böcker och din questlogg. Den har två sorters röster:</p>
+    <div class="grid-2">
+      <div class="result top"><strong>Direkt i spelet</strong><br><span class="small">Spelet använder talsyntesen som finns i din dator. Varje NPC får en egen fast röst och ett eget tempo bland de röster som passar NPC:ns kön. Det fungerar direkt utan installation.</span></div>
+      <div class="result"><strong>AI-röster med öppen källkod</strong><br><span class="small">Klipp som du skapar på din egen dator med en modell i nivå med ElevenLabs. De spelas upp automatiskt när de finns.</span></div>
     </div>
-    <p class="muted small">Addons får inte prata med andra program medan spelet körs. Därför skapas rösterna mellan spelsessionerna. Verktyget läser bara addonens sparfil och skriver ljudfiler. Det rör aldrig själva spelet.</p>
+    <h3>Så hänger det ihop</h3>
+    <div class="flow">
+      <div><b>1. Zonpaket i förväg</b>Skapa röster för en hel zon innan du spelar den. Då hörs AI-rösten redan första gången.</div>
+      <div><b>2. Spela</b>Texter som saknar klipp läses med datorns röst och sparas när du loggar ut.</div>
+      <div><b>3. Fyll på</b>Kör <code>forever_voice.py</code>. Den gör klipp av allt som saknas.</div>
+      <div><b>4. Starta om</b>Nya klipp spelas från nästa start av spelet.</div>
+    </div>
+    <p class="muted small" style="margin-top:12px">Addons får inte prata med andra program medan spelet körs. Därför kan en AI-modell inte läsa upp en text i samma ögonblick som den visas. Zonpaketen löser det för quests, och datorns egna röster täcker resten.</p>
   </div>
-
   <div class="card">
-    <h3 style="margin-top:0">Vilken röstmodell ska du välja?</h3>
+    <h2>Välj röstmodell</h2>
     <div class="table-wrap"><table>
       <thead><tr><th>Modell</th><th>Licens</th><th>Styrka</th><th>Dator</th></tr></thead>
       <tbody>
-        <tr><td><strong>Kokoro-82M</strong><br><span class="muted small">--engine kokoro</span></td><td>Apache-2.0</td><td>Bra och naturlig röst. Mycket snabb. Bäst att börja med.</td><td>Vanlig dator, CPU räcker</td></tr>
-        <tr><td><strong>Chatterbox</strong> (Resemble AI)<br><span class="muted small">--engine chatterbox</span></td><td>MIT</td><td>Klonar en röst från ett kort ljudklipp. Har reglage för känsla. Passar karaktärsröster.</td><td>Grafikkort rekommenderas</td></tr>
-        <tr><td><strong>Fish Audio Drama 3</strong><br><span class="muted small">--engine http</span></td><td>Fish Audio Community License: gratis privat, avgift för större företag</td><td>Mest uttrycksfull. Du regisserar med <code>[viskar skräckslaget]</code> före texten.</td><td>Mycket stor modell (35B), cirka 32–48 GB grafikminne. Hyr en GPU för en körning.</td></tr>
-        <tr><td><strong>Fish Audio S2 Pro</strong><br><span class="muted small">--engine http</span></td><td>Endast forskning och icke-kommersiellt</td><td>Mycket uttrycksfull, föregångare till Drama 3.</td><td>Grafikkort</td></tr>
-        <tr><td><strong>Piper</strong></td><td>MIT / GPL</td><td>Enkel röst, men snabb och har svenska röster.</td><td>Fungerar även på en Raspberry Pi</td></tr>
-        <tr><td><strong>XTTS-v2</strong> (Coqui)</td><td>Icke-kommersiell</td><td>Bra kloning, men utvecklingen har stannat.</td><td>Grafikkort</td></tr>
+        <tr><td><strong>Kokoro-82M</strong><br><span class="muted tiny">--engine kokoro</span></td><td>Apache-2.0</td><td>28 röster, naturlig och mycket snabb. Bäst att börja med.</td><td>Vanlig dator, processorn räcker</td></tr>
+        <tr><td><strong>Chatterbox</strong><br><span class="muted tiny">--engine chatterbox</span></td><td>MIT</td><td>Klonar en röst från ett kort klipp. Har reglage för känsla. Passar dvärgar, orcher och alver.</td><td>Grafikkort rekommenderas</td></tr>
+        <tr><td><strong>Fish Audio Drama 3</strong><br><span class="muted tiny">--engine http</span></td><td>Fish Audio Community License</td><td>Mest uttrycksfull. Du regisserar med till exempel <code>[viskar skräckslaget]</code>.</td><td>35B, cirka 32–48 GB grafikminne</td></tr>
+        <tr><td><strong>Fish Audio S2 Pro</strong><br><span class="muted tiny">--engine http</span></td><td>Endast icke-kommersiellt</td><td>Mycket uttrycksfull, föregångare till Drama 3.</td><td>Grafikkort</td></tr>
+        <tr><td><strong>Piper</strong></td><td>MIT / GPL</td><td>Enkel röst, men snabb och finns på svenska.</td><td>Även Raspberry Pi</td></tr>
       </tbody>
     </table></div>
-    <p class="small muted">Rekommendation: börja med Kokoro, som fungerar på alla datorer. Byt till Chatterbox när du vill ha egna röster till dvärgar, orcher och alver. Drama 3 passar när du vill göra en stor körning av en hel zon på en hyrd server.</p>
+  </div>
+</section>
+
+<!-- ============ Updates ============ -->
+<section id="updates" role="tabpanel" hidden>
+  <div class="card">
+    <h2>Uppdateras av patchnoter</h2>
+    <p class="lead">All speldata ligger i en egen fil, skild från koden. En lokal språkmodell läser patchnoter och hotfixar och föreslår ändringar i den filen.</p>
+    <div class="flow">
+      <div><b>1. Läs</b>Hämtar patchnoter och sparar bara stycken som rör appens data.</div>
+      <div><b>2. Bedöm</b>Den lokala modellen avgör om något ändras och citerar meningen som visar det.</div>
+      <div><b>3. Kontrollera</b>Citatet måste finnas i texten, och det gamla värdet måste stämma. Orimliga hopp avvisas.</div>
+      <div><b>4. Testa</b>Ändringen sparas bara om alla tester går igenom. Annars rullas allt tillbaka.</div>
+    </div>
+    <pre>ollama pull qwen3:14b
+python companion/patch_watch.py --file hotfix.txt            # visar förslag
+python companion/patch_watch.py --fetch --apply --commit     # hämtar, tillämpar och committar</pre>
+    <p class="muted small">Kodändringar som modellen föreslår, till exempel ett API som bytt namn, hamnar i en rapport som du granskar. En felaktig kodändring kan nämligen få addonen att sluta fungera.</p>
+  </div>
+  <div class="card">
+    <h2>Historik</h2>
+    <p class="muted small" id="data-version"></p>
+    <div class="timeline" id="changelog"></div>
   </div>
 </section>
 
 <!-- ============ Install ============ -->
-<section id="install" hidden>
+<section id="install" role="tabpanel" hidden>
   <div class="card">
     <h2>Installera</h2>
     <h3>Addonen</h3>
     <ol>
       <li>Hämta mappen <a href="https://github.com/Oskar-Erikssons/mellownyellow.github.io/tree/main/forever/addon">forever/addon</a> från GitHub.</li>
-      <li>Kopiera <code>ForeverGuide</code> och <code>ForeverGuide_Voices</code> till spelets <code>Interface/AddOns</code>. I betan heter spelmappen <code>_classic_beta_</code> eller liknande.</li>
-      <li>Starta spelet och skriv <code>/fg</code> för att se alla kommandon.</li>
+      <li>Kopiera <code>ForeverGuide</code> och <code>ForeverGuide_Voices</code> till spelets <code>Interface/AddOns</code>.</li>
+      <li>Starta spelet och skriv <code>/fg</code>.</li>
     </ol>
-    <h3>Röstverktyget</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Kommando</th><th>Funktion</th></tr></thead>
+      <tbody>
+        <tr><td><code>/fg options</code></td><td>Tema, egna färger och inställningar</td></tr>
+        <tr><td><code>/fg ah</code></td><td>Säljråd för dina väskor, fynd och dina försäljningar</td></tr>
+        <tr><td><code>/fg read</code></td><td>Läser upp den valda questen i questloggen</td></tr>
+        <tr><td><code>/fg sim</code></td><td>Stats, formler och vad som höjer skadan mest</td></tr>
+        <tr><td><code>/fg export</code></td><td>Text till webbsimulatorn</td></tr>
+        <tr><td><code>/fg voices</code></td><td>Visar datorns röster</td></tr>
+      </tbody>
+    </table></div>
+    <h3>Verktygen på datorn</h3>
 <pre>cd forever/companion
-pip install numpy soundfile kokoro
-python forever_voice.py --wow "C:/Program Files (x86)/World of Warcraft/_forever_" --dry-run
-python forever_voice.py --wow "C:/Program Files (x86)/World of Warcraft/_forever_"</pre>
-    <h3>Battle.net API (frivilligt)</h3>
-    <p>Med <code>blizzard_fetch.py</code> hämtar du klasser, raser och din karaktärs statistik. Skriptet skriver ut samma exporttext som addonen.</p>
-<pre>set BLIZZARD_CLIENT_ID=...
-set BLIZZARD_CLIENT_SECRET=...
-python blizzard_fetch.py character --realm din-realm --name Oskar</pre>
-    <p class="small muted">Lägg aldrig din client secret på den här webbsidan. Allt på GitHub Pages är offentligt. Blizzard har ännu inte sagt vilken namespace WoW: Forever får i API:et, så verktyget använder Classic Era tills vidare.</p>
+pip install numpy soundfile requests kokoro
+python forever_voice.py --wow "C:/Program Files (x86)/World of Warcraft/_forever_"
+python forever_voice.py --wow "..." --quests quests.json --zone 12        # zonpaket för Elwynn Forest
+python forever_ah.py --wow "..." --out prices.json                         # priser till webbsidan
+python patch_watch.py --fetch                                              # patchnoter med lokal modell</pre>
+    <p class="small muted">Lägg aldrig din Battle.net client secret på den här sidan. Allt på GitHub Pages är offentligt.</p>
   </div>
 </section>
 
 <!-- ============ Ideas ============ -->
-<section id="ideas" hidden>
-  <div class="card">
-    <h2>Fler funktioner att bygga</h2>
-    <h3>Upplevelse och berättelse</h3>
-    <ul>
-      <li><strong>Svensk översättning:</strong> översätt quest-texterna lokalt och läs upp dem med en svensk röst.</li>
-      <li><strong>Röster per folk:</strong> referensklipp för dvärgar, orcher och alver, så att röst och accent passar NPC:n.</li>
-      <li><strong>Äventyrsdagbok:</strong> spara alla quests du läst och visa dem som en berättelse här på webben.</li>
-      <li><strong>Zonpaket:</strong> skapa alla röster för en zon i förväg och dela paketet med vänner.</li>
-    </ul>
-    <h3>Hjälp att komma vidare</h3>
-    <ul>
-      <li><strong>Uppgraderingsråd:</strong> visa i tooltipen hur mycket ett föremål höjer din skada, baserat på simulatorns statvikter.</li>
-      <li><strong>Hardcore-varning:</strong> röstvarning vid låg hälsa, elitfiender och fiender långt över din nivå.</li>
-      <li><strong>Levlingsrutt:</strong> föreslår nästa quest och zon utifrån nivå, klass och fraktion.</li>
-      <li><strong>Talang- och yrkesplanerare:</strong> kopplad till klassvalet i början.</li>
-    </ul>
-    <h3>Tillgänglighet</h3>
-    <ul>
-      <li>Större text och dyslexivänligt typsnitt i quest-fönstret.</li>
-      <li>Justerbar talhastighet per NPC-typ.</li>
-    </ul>
+<section id="ideas" role="tabpanel" hidden>
+  <div class="grid-2">
+    <div class="card">
+      <h2>Auktionshus 2.0</h2>
+      <p class="lead">Målet är att nå längre än TradeSkillMaster. Det här finns redan:</p>
+      <ul>
+        <li>Marknadspris, historiskt pris och säljchans från dina egna skanningar</li>
+        <li>Råd om handlare eller AH, med deposition och risk</li>
+        <li>Fynd: köp under handlarens pris och sälj direkt</li>
+        <li>Försäljningshistorik från posten och bästa tid att lägga upp</li>
+        <li>Säljknapp hos handlare</li>
+      </ul>
+      <h3>Nästa steg</h3>
+      <ul>
+        <li><strong>Lägga upp med ett klick per auktion:</strong> pris enligt marknaden, underbud med regler du väljer.</li>
+        <li><strong>Avbryta underbjudna auktioner</strong> med en skanning av dina egna.</li>
+        <li><strong>Hantverksvinst:</strong> kostnad för material mot pris på färdig vara.</li>
+        <li><strong>Prisdelning i guilden:</strong> addonen skickar priser mellan guildmedlemmar, så alla får bättre data.</li>
+        <li><strong>Prognos:</strong> priset före och efter en ny raid eller fas, utifrån historiken.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>Upplevelse</h2>
+      <ul>
+        <li><strong>Svensk översättning</strong> av quest-texter med svensk röst</li>
+        <li><strong>Äventyrsdagbok</strong> på webben med alla quests du läst</li>
+        <li><strong>Hardcore-varning</strong> med röst vid låg hälsa och farliga fiender</li>
+        <li><strong>Uppgraderingsråd</strong> i tooltipen utifrån simulatorns statvikter</li>
+        <li><strong>Levlingsrutt</strong> utifrån nivå, klass och fraktion</li>
+      </ul>
+      <h3>Inom reglerna</h3>
+      <p class="small">Allt bygger på det Blizzard tillåter. Addonen agerar bara när du klickar. Verktygen läser addonens sparfil och rör aldrig spelet medan det körs.</p>
+    </div>
   </div>
 </section>
 </main>
-<footer>Forever Guide är ett fanprojekt och har ingen koppling till Blizzard Entertainment. Siffrorna är uppskattningar.</footer>
 
+<!-- Color drawer -->
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-label="Anpassa färger" aria-hidden="true">
+  <div class="row" style="margin-top:0;justify-content:space-between">
+    <h2 style="margin:0">Anpassa färger</h2>
+    <button class="icon-btn" id="close-colors" type="button" aria-label="Stäng">✕</button>
+  </div>
+  <p class="muted small" style="margin-top:8px">Färgerna sparas i din webbläsare, separat för varje tema.</p>
+  <div class="swatches" id="swatches"></div>
+  <h3>Snabbval för accentfärg</h3>
+  <div class="presets" id="presets"></div>
+  <div class="row"><button class="btn ghost" type="button" id="reset-colors">Återställ temat</button></div>
+</aside>
+
+<footer>Forever Guide är ett fanprojekt utan koppling till Blizzard Entertainment. Siffrorna är uppskattningar.</footer>
+
+<script src="gamedata.js"></script>
 <script src="app.js"></script>
 <script>
 (function () {
   "use strict";
   const FG = window.ForeverGuide;
   const $ = (s) => document.querySelector(s);
+  const $$ = (s) => document.querySelectorAll(s);
   const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const fmt = (n, d = 1) => (n == null || isNaN(n) ? "–" : Number(n).toLocaleString("sv-SE", { minimumFractionDigits: d, maximumFractionDigits: d }));
+  const pct = (x) => (x == null ? "–" : Math.round(x * 100) + " %");
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : v; } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+    del(k) { try { localStorage.removeItem(k); } catch (e) {} },
+  };
 
-  // ---- Tabs ----
-  document.querySelectorAll("nav button").forEach((b) => b.addEventListener("click", () => {
-    document.querySelectorAll("nav button").forEach((x) => x.setAttribute("aria-selected", x === b));
-    document.querySelectorAll("main > section").forEach((s) => { s.hidden = s.id !== b.dataset.tab; });
-  }));
+  // ---------------- Theme and colors ----------------
+  const root = document.documentElement;
+  const COLOR_KEYS = [["accent", "Accent"], ["title", "Rubriker"], ["bg", "Bakgrund"], ["surface", "Ytor"], ["text", "Text"], ["muted", "Dämpad text"], ["line", "Linjer"]];
+  const PRESETS = ["#e09a3e", "#c0392b", "#2457a6", "#2e8b57", "#8e44ad", "#d4af37", "#16a3b8", "#e05a9c"];
 
-  // ---- Advisor ----
+  function luminance(hex) {
+    const n = parseInt(hex.slice(1), 16);
+    const ch = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; });
+    return 0.2126 * ch[0] + 0.7152 * ch[1] + 0.0722 * ch[2];
+  }
+  function toHex(color) {
+    const c = document.createElement("canvas").getContext("2d");
+    c.fillStyle = color;
+    return c.fillStyle.startsWith("#") ? c.fillStyle : "#000000";
+  }
+  function current(key) { return toHex(getComputedStyle(root).getPropertyValue("--" + key).trim()); }
+  function updateInk() {
+    // Text on accent buttons: dark or light, whichever reads better.
+    root.style.setProperty("--accent-ink", luminance(current("accent")) > 0.45 ? "#1b1206" : "#ffffff");
+  }
+  function savedColors(theme) { try { return JSON.parse(store.get("fg-colors-" + theme, "{}")); } catch (e) { return {}; } }
+
+  function setTheme(theme) {
+    root.dataset.theme = theme;
+    for (const [k] of COLOR_KEYS) root.style.removeProperty("--" + k);
+    for (const [k, v] of Object.entries(savedColors(theme))) root.style.setProperty("--" + k, v);
+    store.set("fg-theme", theme);
+    $$("[data-set-theme]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.setTheme === theme));
+    updateInk();
+    renderSwatches();
+  }
+  function setColor(key, value) {
+    const theme = root.dataset.theme;
+    const c = savedColors(theme);
+    c[key] = value;
+    store.set("fg-colors-" + theme, JSON.stringify(c));
+    root.style.setProperty("--" + key, value);
+    updateInk();
+  }
+  function renderSwatches() {
+    $("#swatches").innerHTML = COLOR_KEYS.map(([k, label]) =>
+      `<label>${label}<input type="color" data-color="${k}" value="${current(k)}"></label>`).join("");
+    $$("[data-color]").forEach((i) => i.addEventListener("input", () => setColor(i.dataset.color, i.value)));
+  }
+  $("#presets").innerHTML = PRESETS.map((c) => `<button type="button" style="background:${c}" data-preset="${c}" aria-label="Accentfärg ${c}"></button>`).join("");
+  $$("[data-preset]").forEach((b) => b.addEventListener("click", () => { setColor("accent", b.dataset.preset); renderSwatches(); }));
+  $$("[data-set-theme]").forEach((b) => b.addEventListener("click", () => setTheme(b.dataset.setTheme)));
+  $("#reset-colors").addEventListener("click", () => { store.del("fg-colors-" + root.dataset.theme); setTheme(root.dataset.theme); });
+  function drawer(open) {
+    $("#drawer").classList.toggle("open", open);
+    $("#scrim").classList.toggle("open", open);
+    $("#drawer").setAttribute("aria-hidden", !open);
+    if (open) $("#close-colors").focus();
+  }
+  $("#open-colors").addEventListener("click", () => drawer(true));
+  $("#close-colors").addEventListener("click", () => drawer(false));
+  $("#scrim").addEventListener("click", () => drawer(false));
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") drawer(false); });
+  setTheme(root.dataset.theme);
+
+  // ---------------- Tabs ----------------
+  const tabs = [...$$("nav [role=tab]")];
+  function showTab(id, focus) {
+    tabs.forEach((t) => { const on = t.dataset.tab === id; t.setAttribute("aria-selected", on); t.tabIndex = on ? 0 : -1; if (on && focus) t.focus(); });
+    $$("main > section").forEach((s) => { s.hidden = s.id !== id; });
+    store.set("fg-tab", id);
+  }
+  tabs.forEach((t, i) => {
+    t.addEventListener("click", () => showTab(t.dataset.tab));
+    t.addEventListener("keydown", (e) => {
+      const d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+      if (d) showTab(tabs[(i + d + tabs.length) % tabs.length].dataset.tab, true);
+    });
+  });
+  $$("[data-go]").forEach((b) => b.addEventListener("click", () => { showTab(b.dataset.go); $("nav").scrollIntoView(); }));
+  showTab(tabs.some((t) => t.dataset.tab === store.get("fg-tab")) ? store.get("fg-tab") : "advisor");
+
+  // ---------------- Advisor ----------------
   const QUESTIONS = {
     role: [["any", "Spelar ingen roll"], ["dps", "Göra skada"], ["tank", "Tanka"], ["heal", "Hela"]],
     style: [["any", "Spelar ingen roll"], ["melee", "Närstrid"], ["ranged", "Pilbåge och gevär"], ["caster", "Magi"], ["pet", "Med husdjur"]],
@@ -251,25 +545,21 @@ python blizzard_fetch.py character --realm din-realm --name Oskar</pre>
     hardcore: [["no", "Nej"], ["yes", "Ja"]],
   };
   for (const [name, opts] of Object.entries(QUESTIONS)) {
-    const box = document.querySelector(`.chips[data-name="${name}"]`);
-    box.innerHTML = opts.map(([v, label], i) =>
+    document.querySelector(`.chips[data-name="${name}"]`).innerHTML = opts.map(([v, label], i) =>
       `<label><input type="radio" name="${name}" value="${v}" ${i === 0 ? "checked" : ""}><span>${esc(label)}</span></label>`).join("");
   }
-
   function renderAdvisor() {
     const a = Object.fromEntries(new FormData($("#advisor-form")));
-    const classes = FG.scoreClasses(a).slice(0, 3);
-    $("#advisor-result").innerHTML = classes.map((c, i) => {
+    $("#advisor-result").innerHTML = FG.scoreClasses(a).slice(0, 3).map((c, i) => {
       const races = FG.scoreRaces(c.id, a).slice(0, 3);
       return `<div class="card">
         <h2>${i + 1}. ${esc(c.name)}${c.faction ? `<span class="tag ${c.faction}">bara ${c.faction}</span>` : ""}</h2>
         <p>${esc(c.about)}</p>
         ${c.why.length ? `<p class="muted small">Därför passar den dig: ${esc(c.why.join(", "))}.</p>` : ""}
-        <h3>Bästa raserna för ${esc(c.name.toLowerCase())}</h3>
+        <h3>Bästa raserna</h3>
         ${races.map((r, j) => `<div class="result ${j === 0 ? "top" : ""}">
-          <strong>${esc(r.name)}</strong> <span class="tag ${r.faction}">${r.faction}</span>
-          <span class="tag">PvE ${r.pve}/5</span><span class="tag">PvP ${r.pvp}/5</span>
-          <ul class="small">${r.racials.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>
+          <strong>${esc(r.name)}</strong> <span class="tag ${r.faction}">${r.faction}</span><span class="tag">PvE ${r.pve}/5</span><span class="tag">PvP ${r.pvp}/5</span>
+          <details><summary>Racials</summary><ul class="small">${r.racials.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></details>
         </div>`).join("")}
       </div>`;
     }).join("");
@@ -277,7 +567,7 @@ python blizzard_fetch.py character --realm din-realm --name Oskar</pre>
   $("#advisor-form").addEventListener("change", renderAdvisor);
   renderAdvisor();
 
-  // ---- Simulator ----
+  // ---------------- Simulator ----------------
   const FIELDS = [
     ["class", "Klass", "select", Object.entries(FG.CLASSES).map(([k, c]) => [k, c.name])],
     ["race", "Ras", "select", Object.entries(FG.RACES).map(([k, r]) => [k, r.name])],
@@ -290,20 +580,14 @@ python blizzard_fetch.py character --realm din-realm --name Oskar</pre>
   $("#stats").innerHTML = FIELDS.map(([k, label, type, opts]) => type === "select"
     ? `<label>${label}<select id="f-${k}">${opts.map(([v, t]) => `<option value="${v}">${esc(t)}</option>`).join("")}</select></label>`
     : `<label>${label}<input type="number" step="any" id="f-${k}"></label>`).join("");
-
-  let spells = [];
-
+  let spells = [], offhand = null, rangedCrit = null;
   function fillForm(s) {
     const set = (k, v) => { const el = $("#f-" + k); if (el) el.value = v ?? ""; };
     for (const [k] of FIELDS) set(k, s[k]);
     set("mhMin", s.mh?.min); set("mhMax", s.mh?.max); set("mhSpeed", s.mh?.speed);
     set("rMin", s.ranged?.min); set("rMax", s.ranged?.max); set("rSpeed", s.ranged?.speed);
-    spells = s.spells || [];
-    offhand = s.oh || null;
-    rangedCrit = s.rangedCrit ?? null;
+    spells = s.spells || []; offhand = s.oh || null; rangedCrit = s.rangedCrit ?? null;
   }
-  let offhand = null, rangedCrit = null;
-
   function readForm() {
     const v = (k) => { const x = parseFloat($("#f-" + k).value); return isNaN(x) ? undefined : x; };
     const s = { class: $("#f-class").value, race: $("#f-race").value, spells, oh: offhand };
@@ -313,88 +597,198 @@ python blizzard_fetch.py character --realm din-realm --name Oskar</pre>
     if (rangedCrit != null) s.rangedCrit = rangedCrit;
     return s;
   }
-
   const DEMOS = {
     mage: "FG1&class=MAGE&race=Gnome&lvl=20&str=20&agi=25&sta=40&int=90&spi=70&hp=600&mana=1200&crit=3.00&scrit=5.00&sp=20&heal=0&hit=0&shit=0&mh=10.0-20.0@2.50&spells=Fireball:d:100:130:8:8:3:0:110;Fire Blast:d:60:75:0:0:0:8:75;Frostbolt:d:78:87:0:0:2.5:0:80;Arcane Missiles:d:0:0:130:5:5:0:120",
     warrior: "FG1&class=WARRIOR&race=Human&lvl=60&str=300&agi=150&sta=250&int=30&spi=50&ap=900&crit=20&hit=5&mh=150.0-250.0@3.60",
   };
-
   function doImport(text) {
     try {
       const s = FG.parseExport(text);
       fillForm(s);
       $("#import-msg").innerHTML = `<span class="pos">Inläst: ${esc(FG.CLASSES[s.class]?.name || s.class)}, nivå ${esc(s.level)}, ${spells.length} formler.</span>`;
       runSim();
-    } catch (e) {
-      $("#import-msg").innerHTML = `<span class="error">${esc(e.message)}</span>`;
-    }
+    } catch (e) { $("#import-msg").innerHTML = `<span class="error">${esc(e.message)}</span>`; }
   }
   $("#do-import").addEventListener("click", () => doImport($("#import").value));
-  document.querySelectorAll("[data-demo]").forEach((b) => b.addEventListener("click", () => {
-    $("#import").value = DEMOS[b.dataset.demo];
-    doImport(DEMOS[b.dataset.demo]);
-  }));
+  $$("[data-demo]").forEach((b) => b.addEventListener("click", () => { $("#import").value = DEMOS[b.dataset.demo]; doImport(DEMOS[b.dataset.demo]); }));
   $("#run").addEventListener("click", runSim);
 
   function runSim() {
     const s = readForm();
-    const opt = {
-      targetDiff: +$("#targetDiff").value, weapon: $("#weapon").value, rangedWeapon: $("#rangedWeapon").value,
-      tooltipIncludesSP: $("#tooltipSP").value === "1",
-    };
+    const opt = { targetDiff: +$("#targetDiff").value, weapon: $("#weapon").value, rangedWeapon: $("#rangedWeapon").value, tooltipIncludesSP: $("#tooltipSP").value === "1" };
     if (!FG.RACES[s.race].classes.includes(s.class)) {
       $("#sim-result").innerHTML = `<div class="card error">${esc(FG.RACES[s.race].name)} kan inte vara ${esc(FG.CLASSES[s.class].name.toLowerCase())}.</div>`;
       return;
     }
-    const r = FG.runSim(s, opt);
-    const cmp = FG.compareRaces(s, opt);
-    const w = r.weights;
+    const r = FG.runSim(s, opt), cmp = FG.compareRaces(s, opt), w = r.weights;
     const SOURCE = { melee: "närstrid", ranged: "avståndsattacker", spell: "bästa formel" };
-
-    let html = `<div class="card"><h2>Resultat</h2><div class="table-wrap"><table>
-      <tr><td>Närstrid (vita slag)</td><td class="num">${fmt(r.melee)} DPS</td></tr>
-      <tr><td>Avståndsvapen</td><td class="num">${fmt(r.ranged)} DPS</td></tr>
-      ${r.topSpell ? `<tr><td>Bästa skadeformel: ${esc(r.topSpell.spell.name)}</td><td class="num">${fmt(r.topSpell.dps)} DPS</td></tr>` : ""}
-    </table></div>`;
-
+    let html = `<div class="card"><h2>Resultat</h2><div class="stats">
+      <div class="stat"><div class="v">${fmt(r.melee)}</div><div class="k">DPS närstrid</div></div>
+      <div class="stat"><div class="v">${fmt(r.ranged)}</div><div class="k">DPS avstånd</div></div>
+      ${r.topSpell ? `<div class="stat"><div class="v">${fmt(r.topSpell.dps)}</div><div class="k">DPS ${esc(r.topSpell.spell.name)}</div></div>` : ""}
+    </div>`;
     if (r.results.length) {
       html += `<h3>Dina formler</h3><div class="table-wrap"><table>
         <thead><tr><th>Formel</th><th class="num">Per kast</th><th class="num">Per sekund</th><th class="num">Per mana</th><th class="num">Kast på full mana</th></tr></thead><tbody>
         ${r.results.map((x) => `<tr><td>${esc(x.spell.name)}${x.spell.kind === "heal" ? '<span class="tag">helning</span>' : ""}</td>
           <td class="num">${fmt(x.perCast, 0)}</td><td class="num">${fmt(x.dps)}</td><td class="num">${fmt(x.dpm, 2)}</td><td class="num">${x.castsToOOM ?? "–"}</td></tr>`).join("")}
         </tbody></table></div>`;
-    } else {
-      html += `<p class="muted small">Inga formler inlästa. Importera från spelet för att se dem.</p>`;
     }
-
     const wl = [];
-    if (w.sp10 != null) wl.push(["+10 spell power", w.sp10, "på bästa formeln"]);
-    if (w.crit1 != null) wl.push(["+1 % crit med magi", w.crit1, "på bästa formeln"]);
-    if (w.ap14 != null) wl.push(["+14 attack power", w.ap14, "i närstrid"]);
-    if (w.meleeCrit1 != null) wl.push(["+1 % crit i närstrid", w.meleeCrit1, "i närstrid"]);
-    if (w.hit1 != null) wl.push(["+1 % hit", w.hit1, w.hit1 === 0 ? "du har redan nått taket mot den här fienden" : "i närstrid"]);
+    if (w.sp10 != null) wl.push(["+10 spell power", w.sp10, "bästa formeln"]);
+    if (w.crit1 != null) wl.push(["+1 % crit med magi", w.crit1, "bästa formeln"]);
+    if (w.ap14 != null) wl.push(["+14 attack power", w.ap14, "närstrid"]);
+    if (w.meleeCrit1 != null) wl.push(["+1 % crit i närstrid", w.meleeCrit1, "närstrid"]);
+    if (w.hit1 != null) wl.push(["+1 % hit", w.hit1, w.hit1 === 0 ? "du har redan nått taket mot den här fienden" : "närstrid"]);
     if (wl.length) {
       wl.sort((a, b) => b[1] - a[1]);
       html += `<h3>Det här höjer din skada mest</h3><div class="table-wrap"><table>
         ${wl.map(([l, v, note]) => `<tr><td>${l}</td><td class="num pos">+${fmt(v, 2)} DPS</td><td class="muted small">${note}</td></tr>`).join("")}</table></div>`;
     }
     html += `</div>`;
-
     if (cmp) {
       html += `<div class="card"><h2>Samma utrustning, annan ras</h2>
-        <p class="muted small">Jämför ${SOURCE[cmp.source]}. Räknar med rasens grundstats, vapenskicklighet och snittet av Berserking och Blood Fury över en lång strid.</p>
+        <p class="muted small">Jämför ${SOURCE[cmp.source]}. Räknar med grundstats, vapenskicklighet och snittet av Berserking och Blood Fury över en lång strid.</p>
         <div class="table-wrap"><table><thead><tr><th>Ras</th><th class="num">DPS</th><th class="num">Skillnad</th></tr></thead><tbody>
-        ${cmp.rows.map((x) => `<tr><td><strong>${esc(x.name)}</strong>${x.current ? '<span class="tag">din ras</span>' : ""}
-            <span class="small ${x.faction}">${x.faction}</span>
+        ${cmp.rows.map((x) => `<tr><td><strong>${esc(x.name)}</strong>${x.current ? '<span class="tag">din ras</span>' : ""} <span class="small ${x.faction}">${x.faction}</span>
             <details><summary>Racials</summary><ul class="small">${x.racials.map((y) => `<li>${esc(y)}</li>`).join("")}</ul></details></td>
           <td class="num">${fmt(x.value)}</td>
           <td class="num ${x.change > 0.05 ? "pos" : x.change < -0.05 ? "neg" : ""}">${x.current ? "–" : (x.change > 0 ? "+" : "") + fmt(x.change, 1) + " %"}</td></tr>`).join("")}
-        </tbody></table></div>
-        <p class="muted small">Skillnaderna i skada är oftast små. Racials som Will of the Forsaken, Stoneform och War Stomp avgör mer i PvP, men de syns inte i DPS.</p></div>`;
+        </tbody></table></div></div>`;
     }
-    html += `<p class="muted small">Uppskattning med reglerna från 2004 och omvandlingstal för nivå 60. Det är ingen fullständig stridssimulering.</p>`;
     $("#sim-result").innerHTML = html;
   }
+
+  // ---------------- Auction house ----------------
+  const money = FG.money;
+  const ACTION = { ah: "Sälj på AH", vendor: "Sälj till handlare", keep: "Behåll" };
+  const copper = (g, s, c) => (+$(g).value || 0) * 10000 + (+$(s).value || 0) * 100 + (+$(c).value || 0);
+
+  function renderCalc() {
+    const sr = +$("#c-sr").value / 100;
+    $("#c-sr-out").textContent = Math.round(sr * 100) + " %";
+    const item = { vendor: copper("#c-vg", "#c-vs", "#c-vc"), market: copper("#c-mg", "#c-ms", "#c-mc"), saleRate: sr, count: Math.max(1, +$("#c-count").value || 1) };
+    const d = FG.decideSale(item, { house: $("#c-house").value, duration: $("#c-duration").value });
+    $("#calc-result").innerHTML = `<div class="verdict"><div><div class="big">${ACTION[d.action]}</div>
+      <div class="small">${esc(d.reason)}</div></div></div>
+      <div class="stats">
+        <div class="stat"><div class="v">${money(d.vendorTotal)}</div><div class="k">Från handlaren</div></div>
+        ${d.ahEV != null ? `<div class="stat"><div class="v">${money(d.ahEV)}</div><div class="k">Väntat på AH</div></div>
+        <div class="stat"><div class="v">${money(d.net)}</div><div class="k">Om det säljs, efter avgift</div></div>
+        <div class="stat"><div class="v">${money(d.deposit)}</div><div class="k">Deposition i risk</div></div>` : ""}
+      </div>`;
+  }
+  $$("#auction .fields input, #auction .fields select").forEach((el) => el.addEventListener("input", renderCalc));
+  renderCalc();
+
+  let prices = null, ahSort = { key: "value", dir: -1 }, ahFilter = "all", ahQuery = "", ahHouse = "faction";
+
+  function loadPrices(data) {
+    prices = data;
+    ahHouse = Object.keys(data.houses || {})[0] || "faction";
+    renderAH();
+  }
+  function readFile(file) {
+    const r = new FileReader();
+    r.onload = () => { try { loadPrices(JSON.parse(r.result)); } catch (e) { $("#ah-summary").innerHTML = `<p class="error">Filen kunde inte läsas: ${esc(e.message)}</p>`; } };
+    r.readAsText(file);
+  }
+  $("#prices-file").addEventListener("change", (e) => e.target.files[0] && readFile(e.target.files[0]));
+  const drop = $("#drop");
+  ["dragenter", "dragover"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add("over"); }));
+  ["dragleave", "drop"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
+  drop.addEventListener("drop", (e) => e.dataTransfer.files[0] && readFile(e.dataTransfer.files[0]));
+  $("#demo-prices").addEventListener("click", () => loadPrices(demoPrices()));
+
+  function demoPrices() {
+    const now = Math.floor(Date.now() / 1000);
+    const rows = [
+      [2589, "Linen Cloth", 13, 85, 70, 90, 0.55], [2592, "Wool Cloth", 33, 140, 120, 150, 0.5], [4306, "Silk Cloth", 150, 620, 560, 600, 0.45],
+      [2770, "Copper Ore", 5, 140, 120, 150, 0.6], [2771, "Tin Ore", 25, 260, 240, 250, 0.4], [2318, "Light Leather", 15, 60, 55, 70, 0.35],
+      [4338, "Mageweave Cloth", 250, 1500, 1350, 1400, 0.5], [3575, "Iron Bar", 200, 900, 800, 950, 0.3], [818, "Tigerseye", 100, 2200, 1900, 2500, 0.25],
+      [2672, "Stringy Wolf Meat", 4, 30, 25, 28, 0.2], [774, "Malachite", 100, 650, 600, 700, 0.3], [2449, "Earthroot", 10, 90, 80, 85, 0.45],
+      [2886, "Crag Boar Rib", 7, 6, 5, 8, 0.1], [1475, "Small Venom Sac", 75, 40, 35, 60, 0.2], [5465, "Small Spider Leg", 2, 0, 1, 0, 0],
+    ];
+    const items = rows.map(([id, name, vendor, market, min, h, sr]) => ({ id, name, vendor, market: market || null, min, historical: h || null, saleRate: sr || null, quantity: Math.round(Math.random() * 300), observed: 40, updated: now - 3600 }));
+    const soldByHour = {};
+    for (let h = 0; h < 24; h++) soldByHour[h] = Math.round(4 + 10 * Math.exp(-((h - 20) ** 2) / 10) + 3 * Math.exp(-((h - 12) ** 2) / 6));
+    return { generated: now, houses: { faction: items }, sales: [{ item: "Silk Cloth", price: 12400, net: 11780, t: now - 7200 }, { item: "Copper Ore", price: 2800, net: 2660, t: now - 86400 }], soldByHour };
+  }
+
+  function rowsFor(house) {
+    return (prices.houses[house] || []).map((x) => {
+      const d = FG.decideSale({ vendor: x.vendor || 0, market: x.market, saleRate: x.saleRate }, { house });
+      const value = d.action === "ah" ? d.ahEV : d.vendorTotal;
+      const flip = x.vendor > 0 && x.min > 0 && x.min < x.vendor ? x.vendor - x.min : 0;
+      return { ...x, d, value: value || 0, gain: d.gain ?? 0, flip };
+    });
+  }
+
+  function renderAH() {
+    if (!prices) return;
+    const rows = rowsFor(ahHouse);
+    const ah = rows.filter((r) => r.d.action === "ah").length;
+    const flips = rows.filter((r) => r.flip > 0);
+    const salesWeek = (prices.sales || []).filter((s) => s.t > Date.now() / 1000 - 7 * 86400);
+    const sum = salesWeek.reduce((a, s) => a + (s.net || 0), 0);
+    const hours = Array.from({ length: 24 }, (_, h) => +(prices.soldByHour?.[h] ?? prices.soldByHour?.[String(h)] ?? 0));
+    const maxH = Math.max(1, ...hours), best = hours.indexOf(Math.max(...hours));
+
+    $("#ah-summary").innerHTML = `<div class="stats">
+        <div class="stat"><div class="v">${rows.length}</div><div class="k">Föremål med pris</div></div>
+        <div class="stat"><div class="v">${ah}</div><div class="k">Bäst på AH</div></div>
+        <div class="stat"><div class="v">${flips.length}</div><div class="k">Fynd att vända</div></div>
+        <div class="stat"><div class="v">${money(sum)}</div><div class="k">Sålt senaste veckan</div></div>
+      </div>
+      ${Object.keys(prices.houses).length > 1 ? `<div class="row"><label class="small">Auktionshus <select id="ah-house">${Object.keys(prices.houses).map((h) => `<option ${h === ahHouse ? "selected" : ""}>${h}</option>`).join("")}</select></label></div>` : ""}
+      ${hours.some((h) => h > 0) ? `<h3>När säljer det mest?</h3>
+        <div class="bars" role="img" aria-label="Försäljningar per timme. Flest klockan ${best}.">${hours.map((h, i) => `<div class="${i === best ? "best" : ""}" style="height:${(h / maxH) * 100}%" title="${i}:00 – ${h}"></div>`).join("")}</div>
+        <div class="bar-labels">${hours.map((_, i) => `<span>${i % 3 === 0 ? i : ""}</span>`).join("")}</div>
+        <p class="small muted">Lägg upp strax före kl. ${best}:00. Då är flest köpare aktiva.</p>` : ""}`;
+    $("#ah-house")?.addEventListener("change", (e) => { ahHouse = e.target.value; renderAH(); });
+
+    let list = rows;
+    if (ahFilter === "ah") list = rows.filter((r) => r.d.action === "ah");
+    if (ahFilter === "vendor") list = rows.filter((r) => r.d.action === "vendor");
+    if (ahFilter === "flip") list = flips;
+    if (ahQuery) list = list.filter((r) => (r.name || String(r.id)).toLowerCase().includes(ahQuery));
+    list = [...list].sort((a, b) => {
+      const va = a[ahSort.key] ?? 0, vb = b[ahSort.key] ?? 0;
+      return (typeof va === "string" ? va.localeCompare(vb) : va - vb) * ahSort.dir;
+    });
+    const th = (key, label, num) => `<th class="${num ? "num" : ""}" aria-sort="${ahSort.key === key ? (ahSort.dir > 0 ? "ascending" : "descending") : "none"}"><button type="button" data-sort="${key}">${label}${ahSort.key === key ? (ahSort.dir > 0 ? " ↑" : " ↓") : ""}</button></th>`;
+    $("#ah-tables").innerHTML = `<div class="card"><h2>Alla föremål</h2>
+      <div class="row" style="margin-top:0">
+        <input type="search" id="ah-q" placeholder="Sök föremål" value="${esc(ahQuery)}" style="max-width:260px" aria-label="Sök föremål">
+        <div class="chips">${[["all", "Alla"], ["ah", "Sälj på AH"], ["vendor", "Till handlare"], ["flip", "Fynd"]].map(([v, l]) =>
+          `<label><input type="radio" name="ahf" value="${v}" ${ahFilter === v ? "checked" : ""}><span>${l}</span></label>`).join("")}</div>
+      </div>
+      <div class="table-wrap" style="margin-top:12px"><table><thead><tr>
+        ${th("name", "Föremål")}${th("vendor", "Handlare", 1)}${th("market", "AH-pris", 1)}${th("historical", "Historiskt", 1)}${th("saleRate", "Säljchans", 1)}${th("gain", "Råd", 1)}${ahFilter === "flip" ? th("flip", "Fyndvinst", 1) : ""}
+      </tr></thead><tbody>
+      ${list.slice(0, 300).map((r) => `<tr><td>${esc(r.name || "Föremål " + r.id)}</td>
+        <td class="num">${r.vendor ? money(r.vendor) : "–"}</td><td class="num">${r.market ? money(r.market) : "–"}</td>
+        <td class="num">${r.historical ? money(r.historical) : "–"}</td><td class="num">${pct(r.saleRate)}</td>
+        <td class="num ${r.d.action === "ah" ? "pos" : ""}">${ACTION[r.d.action]}${r.d.action === "ah" ? `<br><span class="tiny">+${money(r.gain)}</span>` : ""}</td>
+        ${ahFilter === "flip" ? `<td class="num pos">+${money(r.flip)}</td>` : ""}</tr>`).join("") || `<tr><td colspan="7" class="muted">Inget matchar.</td></tr>`}
+      </tbody></table></div>
+      <p class="small muted" style="margin-top:10px">Rådet gäller ett styck. En hel stack ger mer vinst per auktion, så räkna på den med räknaren ovan.</p></div>`;
+    $("#ah-q").addEventListener("input", (e) => { ahQuery = e.target.value.toLowerCase(); renderAH(); const q = $("#ah-q"); q.focus(); q.setSelectionRange(q.value.length, q.value.length); });
+    $$("[name=ahf]").forEach((r) => r.addEventListener("change", () => { ahFilter = r.value; renderAH(); }));
+    $$("[data-sort]").forEach((b) => b.addEventListener("click", () => {
+      ahSort = { key: b.dataset.sort, dir: ahSort.key === b.dataset.sort ? -ahSort.dir : -1 };
+      renderAH();
+    }));
+  }
+
+  // ---------------- Updates ----------------
+  const D = FG.DATA;
+  $("#data-version").textContent = `Speldatan uppdaterades senast ${D.updated}. Interface ${D.interface}.`;
+  $("#changelog").innerHTML = (D.changelog || []).map((e) => `<div class="entry">
+      <strong>${esc(e.date)}</strong> <span class="tag">${esc(e.source)}</span>
+      <p style="margin:4px 0">${esc(e.summary)}</p>
+      ${e.changes?.length ? `<ul class="small">${e.changes.map((c) => `<li><code>${esc(c.path)}</code>: ${esc(JSON.stringify(c.old))} → ${esc(JSON.stringify(c.value))}<br><span class="muted">”${esc(c.quote)}”</span></li>`).join("")}</ul>` : ""}
+    </div>`).join("");
 })();
 </script>
 </body>

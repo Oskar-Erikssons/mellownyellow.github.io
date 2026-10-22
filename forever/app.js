@@ -3,83 +3,11 @@
 (function (root) {
   "use strict";
 
-  const CLASSES = {
-    WARRIOR: { name: "Krigare", roles: ["tank", "dps"], style: ["melee"], solo: 2, easy: 2, demand: 5, pvp: 3, survive: 2,
-      about: "Bäst tank i spelet och toppar skadan i raider med bra utrustning. Långsam och sårbar att levla solo, beroende av utrustning." },
-    PALADIN: { name: "Paladin", roles: ["heal", "tank", "dps"], style: ["melee"], solo: 3, easy: 4, demand: 4, pvp: 3, survive: 5, faction: "Alliance",
-      about: "Tålig hybrid med auror och välsignelser som alla grupper vill ha. Divine Shield gör den mycket säker i Hardcore. Bara Alliance." },
-    SHAMAN: { name: "Shaman", roles: ["heal", "dps"], style: ["melee", "caster"], solo: 4, easy: 3, demand: 4, pvp: 4, survive: 3, faction: "Horde",
-      about: "Totemer, helning och stora Windfury-träffar. Stark i PvP och efterfrågad som helare. Bara Horde." },
-    HUNTER: { name: "Jägare", roles: ["dps"], style: ["ranged", "pet"], solo: 5, easy: 5, demand: 2, pvp: 4, survive: 5,
-      about: "Lättast att levla solo tack vare husdjuret. Feign Death räddar livet. Få platser i raider." },
-    ROGUE: { name: "Rogue", roles: ["dps"], style: ["melee"], solo: 3, easy: 3, demand: 3, pvp: 5, survive: 4,
-      about: "Smyger, väljer sina strider och dominerar PvP med stun-lås. Hög skada i raider." },
-    PRIEST: { name: "Präst", roles: ["heal", "dps"], style: ["caster"], solo: 3, easy: 3, demand: 5, pvp: 4, survive: 3,
-      about: "Spelets bästa helare och alltid efterfrågad. Shadow-inriktning gör levlingen enklare. Varje ras har egna prästformler." },
-    MAGE: { name: "Magiker", roles: ["dps"], style: ["caster"], solo: 4, easy: 3, demand: 4, pvp: 4, survive: 4,
-      about: "Hög skada, AoE-farmning och gratis mat, vatten och portaler. Bra för guld." },
-    WARLOCK: { name: "Warlock", roles: ["dps"], style: ["caster", "pet"], solo: 5, easy: 2, demand: 3, pvp: 5, survive: 4,
-      about: "Demoner, DoTs och fear. Mycket stark solo och i PvP, men kräver mer att spela väl." },
-    DRUID: { name: "Druid", roles: ["heal", "tank", "dps"], style: ["melee", "caster"], solo: 4, easy: 2, demand: 3, pvp: 3, survive: 4,
-      about: "Kan allt: tank, helare, katt och moonkin. Reseform från nivå 30 gör utforskning lätt." },
-  };
+  // Game rules come from data/gamedata.json (via gamedata.js), so patch notes can update them without code changes.
+  const DATA = typeof module !== "undefined" && module.exports ? require("./gamedata.js") : root.FOREVER_DATA;
+  const { classes: CLASSES, races: RACES, raceFit: RACE_FIT, rates: RATES, combat: C, auction: AH } = DATA;
 
-  // Base stat offsets relative to Human (1.12) and multipliers from racials.
-  const RACES = {
-    Human: { name: "Människa", faction: "Alliance", classes: ["WARRIOR", "PALADIN", "ROGUE", "PRIEST", "MAGE", "WARLOCK"],
-      offset: [0, 0, 0, 0, 0], mult: { spi: 1.05 }, weaponSkill: ["sword", "mace"],
-      racials: ["Perception: ser smygande fiender", "Sword/Mace Specialization: +5 vapenskicklighet", "The Human Spirit: +5 % Spirit", "Diplomacy: +10 % rykte"] },
-    Dwarf: { name: "Dvärg", faction: "Alliance", classes: ["WARRIOR", "PALADIN", "HUNTER", "ROGUE", "PRIEST"],
-      offset: [2, -4, 3, -1, -1], rangedCrit: ["gun"],
-      racials: ["Stoneform: tar bort gift, sjukdom och blödning, +10 % rustning", "Gun Specialization: +1 % crit med gevär", "Frost Resistance +10", "Find Treasure"] },
-    NightElf: { name: "Nattalf", faction: "Alliance", classes: ["WARRIOR", "HUNTER", "ROGUE", "PRIEST", "DRUID"],
-      offset: [-3, 5, -1, 0, 0],
-      racials: ["Shadowmeld: osynlig när du står still", "Quickness: +1 % dodge", "Nature Resistance +10", "Wisp Spirit: snabbare som ande"] },
-    Gnome: { name: "Gnom", faction: "Alliance", classes: ["WARRIOR", "ROGUE", "MAGE", "WARLOCK"],
-      offset: [-5, 3, -1, 3, 0], mult: { int: 1.05 },
-      racials: ["Escape Artist: bryter rotar och snaror", "Expansive Mind: +5 % Intellect", "Arcane Resistance +10", "Engineering Specialization: +15 Engineering"] },
-    Orc: { name: "Orc", faction: "Horde", classes: ["WARRIOR", "HUNTER", "ROGUE", "SHAMAN", "WARLOCK"],
-      offset: [3, -3, 2, -3, 2], weaponSkill: ["axe"], bloodFury: true,
-      racials: ["Blood Fury: +25 % bas-AP i 15 s", "Hardiness: +25 % motstånd mot stun", "Command: +5 % skada för husdjur", "Axe Specialization: +5 vapenskicklighet"] },
-    Scourge: { name: "Odöd", faction: "Horde", classes: ["WARRIOR", "ROGUE", "PRIEST", "MAGE", "WARLOCK"],
-      offset: [-1, -2, 1, -2, 5],
-      racials: ["Will of the Forsaken: bryter fear, charm och sleep", "Cannibalize: helar på lik", "Shadow Resistance +10", "Andas under vatten 4 gånger längre"] },
-    Tauren: { name: "Tauren", faction: "Horde", classes: ["WARRIOR", "HUNTER", "SHAMAN", "DRUID"],
-      offset: [5, -5, 2, -4, 2], mult: { hp: 1.05 },
-      racials: ["War Stomp: stun på alla runt dig i 2 s", "Endurance: +5 % hälsa", "Nature Resistance +10", "Cultivation: +15 Herbalism"] },
-    Troll: { name: "Troll", faction: "Horde", classes: ["WARRIOR", "HUNTER", "ROGUE", "PRIEST", "SHAMAN", "MAGE"],
-      offset: [1, 2, 1, -4, 1], berserking: true, rangedCrit: ["bow", "thrown"],
-      racials: ["Berserking: 10-30 % snabbare attacker och kast i 10 s", "Regeneration: +10 % hälsoåterhämtning", "Beast Slaying: +5 % skada mot djur", "Bow/Throwing Specialization: +1 % crit"] },
-  };
-
-  // How much each race helps a class, per goal (0-5). Missing = 3.
-  const RACE_FIT = {
-    WARRIOR: { pve: { Human: 5, Orc: 5, Troll: 4, Dwarf: 4, Tauren: 3, NightElf: 3, Scourge: 3, Gnome: 2 },
-               pvp: { Orc: 5, Scourge: 5, Human: 4, Tauren: 4, Gnome: 4, Dwarf: 4, Troll: 3, NightElf: 2 } },
-    PALADIN: { pve: { Human: 5, Dwarf: 4 }, pvp: { Dwarf: 5, Human: 4 } },
-    HUNTER: { pve: { Troll: 5, Orc: 5, Dwarf: 4, NightElf: 4, Tauren: 3 }, pvp: { NightElf: 5, Orc: 5, Dwarf: 4, Troll: 4, Tauren: 4 } },
-    ROGUE: { pve: { Human: 5, Orc: 5, Troll: 4, Gnome: 3, Dwarf: 4, NightElf: 3, Scourge: 3 }, pvp: { Scourge: 5, Human: 5, Gnome: 4, Orc: 4, NightElf: 4, Dwarf: 4, Troll: 3 } },
-    PRIEST: { pve: { Dwarf: 5, Human: 4, Troll: 4, Scourge: 4, NightElf: 3 }, pvp: { Scourge: 5, Dwarf: 5, Human: 4, Troll: 4, NightElf: 3 } },
-    SHAMAN: { pve: { Troll: 5, Orc: 4, Tauren: 4 }, pvp: { Orc: 5, Tauren: 5, Troll: 4 } },
-    MAGE: { pve: { Troll: 5, Gnome: 5, Human: 4, Scourge: 4 }, pvp: { Scourge: 5, Gnome: 5, Human: 4, Troll: 4 } },
-    WARLOCK: { pve: { Gnome: 5, Human: 4, Orc: 5, Scourge: 4 }, pvp: { Scourge: 5, Orc: 5, Gnome: 5, Human: 4 } },
-    DRUID: { pve: { Tauren: 4, NightElf: 4 }, pvp: { Tauren: 5, NightElf: 4 } },
-  };
-
-  // Level 60 conversion rates (1.12). Lower levels need fewer points per %, so this understates there.
-  const RATES = {
-    WARRIOR: { apStr: 2, apAgi: 0, rapAgi: 1, agiCrit: 20, intCrit: 0, baseAP: 3 },
-    PALADIN: { apStr: 2, apAgi: 0, rapAgi: 0, agiCrit: 20, intCrit: 54, baseAP: 3 },
-    SHAMAN: { apStr: 2, apAgi: 0, rapAgi: 0, agiCrit: 20, intCrit: 59.5, baseAP: 3 },
-    DRUID: { apStr: 2, apAgi: 0, rapAgi: 0, agiCrit: 20, intCrit: 60, baseAP: 3 },
-    ROGUE: { apStr: 1, apAgi: 1, rapAgi: 1, agiCrit: 29, intCrit: 0, baseAP: 2 },
-    HUNTER: { apStr: 1, apAgi: 1, rapAgi: 2, agiCrit: 53, intCrit: 0, baseAP: 2 },
-    PRIEST: { apStr: 1, apAgi: 0, rapAgi: 0, agiCrit: 20, intCrit: 59.2, baseAP: 1 },
-    MAGE: { apStr: 1, apAgi: 0, rapAgi: 0, agiCrit: 20, intCrit: 59.5, baseAP: 1 },
-    WARLOCK: { apStr: 1, apAgi: 0, rapAgi: 0, agiCrit: 20, intCrit: 60.6, baseAP: 1 },
-  };
-
-  const RACE_ALIASES = { Undead: "Scourge", NightElf: "NightElf", "Night Elf": "NightElf" };
+  const RACE_ALIASES = { Undead: "Scourge", "Night Elf": "NightElf" };
 
   // ---------- Class and race advisor ----------
 
@@ -159,25 +87,19 @@
 
   // ---------- Simulator (same rules as the addon's Sim.lua) ----------
 
-  const GCD = 1.5;
-  const SPELL_MISS = [4, 5, 6, 17];
-  const MELEE_MISS = [5, 5.5, 6, 8];
-  const GLANCE_CHANCE = [0.1, 0.2, 0.3, 0.4];
-  const GLANCE_MULT = [0.95, 0.95, 0.85, 0.65];
-
   function spellResult(spell, s, opt = {}) {
     const diff = opt.targetDiff || 0;
     const sp = (spell.kind === "heal" ? s.healing || 0 : s.sp || 0) + (opt.extraSP || 0);
     const crit = ((s.spellCrit || 0) + (opt.extraCrit || 0)) / 100;
-    const hit = spell.kind === "heal" ? 1 : Math.min(0.99, 1 - Math.max(1, SPELL_MISS[diff] - (s.spellHit || 0)) / 100);
-    const cast = Math.max(spell.cast, GCD) / (opt.haste || 1);
+    const hit = spell.kind === "heal" ? 1 : Math.min(0.99, 1 - Math.max(1, C.spellMiss[diff] - (s.spellHit || 0)) / 100);
+    const cast = Math.max(spell.cast, C.gcd) / (opt.haste || 1);
     const direct = (spell.min + spell.max) / 2;
-    let cDirect = Math.min(1, Math.max(spell.cast, GCD) / 3.5);
+    let cDirect = Math.min(1, Math.max(spell.cast, C.gcd) / 3.5);
     let cDot = Math.min(1, (spell.dur || 0) / 15);
     if (direct > 0 && spell.dot > 0) { cDirect *= 0.5; cDot *= 0.5; }
     if (opt.tooltipIncludesSP) { cDirect = 0; cDot = 0; }
     let perCast = 0;
-    if (direct > 0) perCast = (direct + sp * cDirect) * (1 + crit * 0.5);
+    if (direct > 0) perCast = (direct + sp * cDirect) * (1 + crit * (C.spellCritMult - 1));
     if (spell.dot > 0) perCast += spell.dot + sp * cDot;
     perCast *= hit;
     const time = Math.max(cast, spell.cd || 0);
@@ -190,18 +112,18 @@
 
   function attackTable(s, opt, critPct, hitBonus, dualWield) {
     const diff = opt.targetDiff || 0;
-    const miss = Math.max(0, MELEE_MISS[diff] + (dualWield ? 19 : 0) - (s.hit || 0) - hitBonus) / 100;
+    const miss = Math.max(0, C.meleeMiss[diff] + (dualWield ? C.dualWieldMiss : 0) - (s.hit || 0) - hitBonus) / 100;
     const dodge = (5 + diff * 0.5) / 100;
-    const gc = GLANCE_CHANCE[diff];
-    const gm = opt.glanceMult ?? GLANCE_MULT[diff];
+    const gc = C.glanceChance[diff];
+    const gm = opt.glanceMult ?? C.glanceMult[diff];
     const landed = Math.max(0, 1 - miss - dodge - gc);
     const crit = Math.min(critPct / 100, landed);
-    return (landed - crit) + 2 * crit + gc * gm;
+    return (landed - crit) + C.meleeCritMult * crit + gc * gm;
   }
 
   function meleeDPS(s, opt = {}) {
     if (!s.mh) return 0;
-    const apBonus = (opt.extraAP || 0) / 14;
+    const apBonus = (opt.extraAP || 0) / C.apPerDps;
     const mult = attackTable(s, opt, (s.crit || 0) + (opt.extraCrit || 0), opt.extraHit || 0, !!s.oh) * (opt.haste || 1);
     const hand = (h, m) => h ? ((h.min + h.max) / 2 + apBonus * h.speed) / h.speed * m * mult : 0;
     return hand(s.mh, 1) + hand(s.oh, 0.5);
@@ -212,11 +134,11 @@
     const h = s.ranged;
     const crit = (s.rangedCrit ?? s.crit ?? 0) + (opt.extraCrit || 0) + (opt.rangedCritBonus || 0);
     const diff = opt.targetDiff || 0;
-    const miss = Math.max(0, MELEE_MISS[diff] - (s.hit || 0) - (opt.extraHit || 0)) / 100;
+    const miss = Math.max(0, C.meleeMiss[diff] - (s.hit || 0) - (opt.extraHit || 0)) / 100;
     const landed = 1 - miss;
     const c = Math.min(crit / 100, landed);
-    const avg = (h.min + h.max) / 2 + (opt.extraRAP || 0) / 14 * h.speed;
-    return avg / h.speed * ((landed - c) + 2 * c) * (opt.haste || 1);
+    const avg = (h.min + h.max) / 2 + (opt.extraRAP || 0) / C.apPerDps * h.speed;
+    return avg / h.speed * ((landed - c) + C.meleeCritMult * c) * (opt.haste || 1);
   }
 
   function runSim(s, opt = {}) {
@@ -294,8 +216,8 @@
     const diff = opt.targetDiff || 0;
     if ((r.weaponSkill || []).includes(opt.weapon)) {
       // +5 skill: fewer misses and much milder glancing blows against bosses.
-      o.extraHit = diff >= 3 ? 2 : 0.5;
-      if (diff >= 3) o.glanceMult = 0.85;
+      o.extraHit = C.weaponSkillHit[diff];
+      if (diff >= 3) o.glanceMult = C.weaponSkillBossGlanceMult;
     }
     if ((r.rangedCrit || []).includes(opt.rangedWeapon)) o.rangedCritBonus = 1;
     return o;
@@ -304,17 +226,67 @@
   // Cooldown racials averaged over a long fight.
   function racialFactor(s, r, classId, source, opt) {
     let f = 1;
-    if (r.berserking) f *= 1 + 0.10 * 10 / 180;
+    if (r.berserking) f *= 1 + C.berserkingHaste * C.berserkingUptime;
     if (r.bloodFury && source !== "spell") {
       const baseAP = (s.level || 60) * RATES[classId].baseAP;
       const total = Math.max(1, source === "ranged" ? (s.rap || s.ap || 1) : (s.ap || 1));
-      // 25 % more base AP for 15 of every 120 seconds, AP is roughly a third of melee damage.
-      f *= 1 + (0.25 * baseAP / total) * (15 / 120) * 0.35;
+      // More base AP part of the time; AP is roughly a third of melee damage.
+      f *= 1 + (C.bloodFuryBaseAP * baseAP / total) * C.bloodFuryUptime * 0.35;
     }
     return f;
   }
 
-  const api = { CLASSES, RACES, RACE_FIT, RATES, scoreClasses, scoreRaces, parseExport, runSim, compareRaces, spellResult, meleeDPS, rangedDPS };
+  // ---------- Auction house: sell to a vendor or on the AH? ----------
+
+  // item: { vendor, market, saleRate, count, bound } in copper per item.
+  // opt: { house: "faction" | "neutral", duration: "2" | "8" | "24" }
+  function decideSale(item, opt = {}) {
+    const house = opt.house || "faction";
+    const duration = opt.duration || AH.defaultDuration;
+    const count = item.count || 1;
+    const vendorTotal = (item.vendor || 0) * count;
+    if (item.bound) {
+      return { action: vendorTotal > 0 ? "vendor" : "keep", vendorTotal, reason: "Bundet till dig, kan inte säljas på AH." };
+    }
+    if (!item.market) {
+      return { action: vendorTotal > 0 ? "vendor" : "keep", vendorTotal, reason: "Inget AH-pris ännu. Skanna auktionshuset." };
+    }
+    const sr = item.saleRate ?? AH.defaultSaleRate;
+    const deposit = (item.vendor || 0) * count * AH.deposit[house][duration];
+    const net = item.market * count * (1 - AH.cut[house]);
+    // List up to AH.relists times. Each failed listing loses the deposit; if it never sells, vendor it.
+    const fail = 1 - sr;
+    let lost = 0;
+    for (let i = 1; i <= AH.relists; i++) lost += fail ** i;
+    const ahEV = (1 - fail ** AH.relists) * net - lost * deposit + fail ** AH.relists * vendorTotal;
+    const gain = ahEV - vendorTotal;
+    const needed = Math.max(AH.minProfitCopper, vendorTotal * AH.ahMargin);
+    const action = gain > needed ? "ah" : vendorTotal > 0 ? "vendor" : "ah";
+    const reason = action === "ah"
+      ? `AH ger i snitt ${money(gain)} mer än handlaren.`
+      : vendorTotal > 0 ? "Handlaren ger mer eller nästan lika mycket, utan risk." : "Handlaren köper den inte.";
+    return { action, ahEV, vendorTotal, gain, deposit, net, saleRate: sr, reason };
+  }
+
+  // Auctions you can buy and sell straight to a vendor at a profit.
+  function vendorFlips(items) {
+    return items
+      .filter((x) => x.vendor > 0 && x.min > 0 && x.min < x.vendor)
+      .map((x) => ({ ...x, profit: x.vendor - x.min }))
+      .sort((a, b) => b.profit - a.profit);
+  }
+
+  function money(copper) {
+    const c = Math.round(Math.abs(copper || 0));
+    const g = Math.floor(c / 10000), s = Math.floor((c % 10000) / 100), k = c % 100;
+    const parts = [];
+    if (g) parts.push(`${g}g`);
+    if (s || g) parts.push(`${s}s`);
+    parts.push(`${k}c`);
+    return (copper < 0 ? "-" : "") + parts.join(" ");
+  }
+
+  const api = { DATA, CLASSES, RACES, RACE_FIT, RATES, decideSale, vendorFlips, money, scoreClasses, scoreRaces, parseExport, runSim, compareRaces, spellResult, meleeDPS, rangedDPS };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.ForeverGuide = api;
 })(typeof window !== "undefined" ? window : globalThis);

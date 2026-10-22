@@ -1,0 +1,15 @@
+[
+  {
+    "name": "Blizzard WoW-nyheter",
+    "url": "https://worldofwarcraft.blizzard.com/en-us/news",
+    "type": "html",
+    "note": "Kontrollera adressen. Blizzard publicerar hotfixar som nyhetsinlägg."
+  },
+  {
+    "name": "Wowhead nyheter (RSS)",
+    "url": "https://www.wowhead.com/news/rss/all",
+    "type": "rss",
+    "follow_links": true,
+    "note": "Exempel. Byt till en källa som skriver om Forever."
+  }
+]

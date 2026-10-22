@@ -50,12 +50,27 @@ function Narrator:Auto(kind, text)
     if FG.settings.autoRead then self:Speak(kind, text) end
 end
 
+local function escapePattern(s) return (s:gsub("[%^%$%(%)%%%.%[%]%*%+%-%?]", "%%%0")) end
+
 local function clean(text)
     text = FG.Normalize(text)
     if FG.settings.stripEmotes then
         text = FG.Normalize(text:gsub("<[^>]*>", " "))
     end
+    -- Store your name as $N, so voice packs made from quest data work for every character.
+    local me = FG.Safe(UnitName("player"))
+    if me and me ~= "" then text = text:gsub(escapePattern(me), "$N") end
     return text
+end
+
+-- Quest texts are keyed by quest ID, everything else by a hash of the text.
+local QUEST_KINDS = { detail = true, progress = true, complete = true, log = true }
+
+function Narrator.Key(kind, text, questID)
+    if QUEST_KINDS[kind] and questID and questID > 0 then
+        return kind:sub(1, 1) .. questID
+    end
+    return kind:sub(1, 1) .. FG.Hash(text)
 end
 
 local function npcInfo()
@@ -68,7 +83,10 @@ function Narrator:Speak(kind, rawText, questID)
     local text = clean(rawText)
     if text == "" or text == "." then return end
 
-    local key = kind:sub(1, 1) .. FG.Hash(text)
+    questID = questID or (QUEST_KINDS[kind] and kind ~= "log" and FG.Safe(GetQuestID and GetQuestID())) or nil
+    local key = Narrator.Key(kind, text, questID)
+    -- The quest log says the same as the quest giver, so reuse that clip (e.g. from a zone pack).
+    if kind == "log" and questID and not clips()[key] and clips()["d" .. questID] then key = "d" .. questID end
     -- Events can fire twice for the same window; ignore repeats.
     if key == current.key and GetTime() - current.at < 3 then return end
     self:Stop()
@@ -91,50 +109,60 @@ function Narrator:Speak(kind, rawText, questID)
             text = text,
             npc = name,
             sex = sex,
-            quest = questID or FG.Safe(GetQuestID and GetQuestID()) or nil,
+            quest = questID,
             locale = GetLocale(),
         }
     end
 
     if mode ~= "voices" then
-        self:SpeakBuiltin(text, sex)
+        local me = FG.Safe(UnitName("player")) or "adventurer"
+        self:SpeakBuiltin(text:gsub("%$N", me), sex, name)
     end
 end
 
-function Narrator:PickVoice(sex)
+-- Picks a built-in voice. With voice variety on, each NPC keeps its own voice and speed,
+-- chosen from the voices installed on your computer that match the NPC's sex.
+function Narrator:PickVoice(sex, npc)
     local s = FG.settings
-    if sex == 3 and s.femaleVoice then return s.femaleVoice end
-    if sex ~= 3 and s.maleVoice then return s.maleVoice end
+    if sex == 3 and s.femaleVoice then return s.femaleVoice, 0 end
+    if sex ~= 3 and s.maleVoice then return s.maleVoice, 0 end
 
     local voices = FG.Try(C_VoiceChat.GetTtsVoices) or {}
     if #voices == 0 then return nil end
     local hints = sex == 3 and FEMALE_HINTS or MALE_HINTS
+    local matching = {}
     for _, v in ipairs(voices) do
         local n = (v.name or ""):lower()
         for _, h in ipairs(hints) do
-            if n:find(h, 1, true) then return v.voiceID end
+            if n:find(h, 1, true) then table.insert(matching, v.voiceID) break end
         end
     end
-    return voices[1].voiceID
+    if #matching == 0 then
+        for _, v in ipairs(voices) do table.insert(matching, v.voiceID) end
+    end
+    if not (s.voiceVariety and npc) then return matching[1], 0 end
+    local h = tonumber(FG.Hash(npc), 16)
+    return matching[h % #matching + 1], (math.floor(h / 7) % 5) - 2
 end
 
-function Narrator:SpeakBuiltin(text, sex)
+function Narrator:SpeakBuiltin(text, sex, npc)
     if not (C_VoiceChat and C_VoiceChat.SpeakText) then
         FG:Print("Built-in text to speech is not available on this client.")
         return
     end
-    local voice = self:PickVoice(sex)
+    local voice, rateOffset = self:PickVoice(sex, npc)
     if not voice then
         FG:Print("No TTS voices installed. Add a voice in your operating system's speech settings.")
         return
     end
     local s = FG.settings
-    if s.ttsLegacy then
+    local rate = math.max(-10, math.min(10, s.rate + (rateOffset or 0)))
+    if s.ttsLegacy or (FG.Data and FG.Data.tts.speakTextSignature == "legacy") then
         -- Signature before patch 12.0: (voiceID, text, destination, rate, volume)
-        C_VoiceChat.SpeakText(voice, text, 1, s.rate, s.volume)
+        C_VoiceChat.SpeakText(voice, text, 1, rate, s.volume)
     else
         -- Signature from patch 12.0, which Forever's client is built on.
-        C_VoiceChat.SpeakText(voice, text, s.rate, s.volume, false)
+        C_VoiceChat.SpeakText(voice, text, rate, s.volume, false)
     end
 end
 

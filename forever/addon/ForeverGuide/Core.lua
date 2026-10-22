@@ -3,7 +3,7 @@ local ADDON, FG = ...
 FG = FG or {}
 _G.ForeverGuide = FG
 
-FG.VERSION = "0.1.0"
+FG.VERSION = "0.2.0"
 
 local DEFAULTS = {
     autoRead = true,      -- read quest text automatically when an NPC shows it
@@ -18,6 +18,14 @@ local DEFAULTS = {
     tooltipIncludesSP = false, -- set true if spell tooltips already include spell power
     targetLevelDiff = 0,  -- simulator: target level minus your level
     ttsLegacy = false,    -- use the pre-12.0 C_VoiceChat.SpeakText signature
+    voiceVariety = true,  -- each NPC gets its own built-in voice and speed
+    theme = "orgrimmar",  -- "orgrimmar" (dark) or "stormwind" (light)
+    colors = {},          -- your own colors per theme
+    tooltip = true,       -- AH and vendor prices in item tooltips
+    house = "auto",       -- "auto", "faction" or "neutral" auction house
+    duration = "24",      -- auction length used in the advice: "2", "8" or "24" hours
+    sellJunk = true,      -- merchant button sells grey items
+    sellAdvised = false,  -- merchant button also sells trade goods the advice says to vendor
 }
 
 FG.events = CreateFrame("Frame")
@@ -26,7 +34,8 @@ FG.handlers = {}
 function FG:On(event, fn)
     self.handlers[event] = self.handlers[event] or {}
     table.insert(self.handlers[event], fn)
-    self.events:RegisterEvent(event)
+    -- Events differ between client versions; registering an unknown one raises an error.
+    pcall(self.events.RegisterEvent, self.events, event)
 end
 
 FG.events:SetScript("OnEvent", function(_, event, ...)
@@ -107,6 +116,11 @@ local HELP = {
     "/fg sp on|off - tooltips already include spell power",
     "/fg target <0..3> - target is this many levels above you",
     "/fg legacy on|off - try this if built-in speech sounds wrong",
+    "/fg variety on|off - a different built-in voice for each NPC",
+    "/fg options - themes, colors and settings",
+    "/fg ah - auction house: prices, advice, flips and sales",
+    "/fg house auto|faction|neutral - which auction house prices to use",
+    "/fg tooltip on|off - prices in item tooltips",
 }
 
 local function onOff(arg, key)
@@ -131,6 +145,17 @@ SlashCmdList.FOREVERGUIDE = function(msg)
         onOff(a, "tooltipIncludesSP")
     elseif cmd == "legacy" then
         onOff(a, "ttsLegacy")
+    elseif cmd == "variety" then
+        onOff(a, "voiceVariety")
+    elseif cmd == "tooltip" then
+        onOff(a, "tooltip")
+    elseif cmd == "house" and (a == "auto" or a == "faction" or a == "neutral") then
+        s.house = a
+        FG:Print("house = " .. a)
+    elseif cmd == "options" or cmd == "theme" then
+        FG.UI:ShowOptions()
+    elseif cmd == "ah" then
+        FG.UI:ShowAuction()
     elseif cmd == "mode" and (a == "voices" or a == "builtin" or a == "both") then
         s.mode = a
         FG:Print("mode = " .. a)

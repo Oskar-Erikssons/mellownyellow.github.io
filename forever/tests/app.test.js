@@ -59,3 +59,22 @@ test("advisor respects faction and role", () => {
   const races = FG.scoreRaces("SHAMAN", { faction: "Horde", focus: "pvp" });
   assert.deepEqual(races.map((r) => r.id).sort(), ["Orc", "Tauren", "Troll"]);
 });
+
+test("AH advice matches the shared cases", () => {
+  for (const c of require("./ah_cases.json")) {
+    assert.equal(FG.decideSale(c.item, { house: c.house }).action, c.action, c.name);
+  }
+});
+
+test("vendor flips and money formatting", () => {
+  const flips = FG.vendorFlips([{ id: 1, vendor: 500, min: 300 }, { id: 2, vendor: 100, min: 400 }, { id: 3, vendor: 900, min: 100 }]);
+  assert.deepEqual(flips.map((x) => x.id), [3, 1]);
+  assert.equal(FG.money(123456), "12g 34s 56c");
+  assert.equal(FG.money(-250), "-2s 50c");
+});
+
+test("generated gamedata.js is in sync with data/gamedata.json", () => {
+  const data = require("../gamedata.js");
+  const src = JSON.parse(require("fs").readFileSync(__dirname + "/../data/gamedata.json", "utf8"));
+  assert.deepEqual({ ...data, changelog: undefined }, { ...src, changelog: undefined });
+});

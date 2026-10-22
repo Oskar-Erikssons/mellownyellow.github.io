@@ -1,0 +1,120 @@
+[
+  {
+    "name": "Bound item goes to vendor",
+    "item": {
+      "vendor": 500,
+      "market": 9000,
+      "bound": true
+    },
+    "house": "faction",
+    "action": "vendor"
+  },
+  {
+    "name": "No AH price, vendor pays",
+    "item": {
+      "vendor": 120
+    },
+    "house": "faction",
+    "action": "vendor"
+  },
+  {
+    "name": "No price, no vendor value",
+    "item": {
+      "vendor": 0
+    },
+    "house": "faction",
+    "action": "keep"
+  },
+  {
+    "name": "Valuable trade good sells well",
+    "item": {
+      "vendor": 100,
+      "market": 5000,
+      "saleRate": 0.6,
+      "count": 5
+    },
+    "house": "faction",
+    "action": "ah"
+  },
+  {
+    "name": "Cheap item: profit below 5s",
+    "item": {
+      "vendor": 100,
+      "market": 300,
+      "saleRate": 0.8
+    },
+    "house": "faction",
+    "action": "vendor"
+  },
+  {
+    "name": "Low sale chance eats the deposit",
+    "item": {
+      "vendor": 2000,
+      "market": 4000,
+      "saleRate": 0.05
+    },
+    "house": "faction",
+    "action": "vendor"
+  },
+  {
+    "name": "Neutral AH deposit is too high",
+    "item": {
+      "vendor": 3000,
+      "market": 9000,
+      "saleRate": 0.5
+    },
+    "house": "neutral",
+    "action": "vendor"
+  },
+  {
+    "name": "Same item at faction AH",
+    "item": {
+      "vendor": 3000,
+      "market": 9000,
+      "saleRate": 0.5
+    },
+    "house": "faction",
+    "action": "ah"
+  },
+  {
+    "name": "Vendor will not buy it",
+    "item": {
+      "vendor": 0,
+      "market": 800,
+      "saleRate": 0.3
+    },
+    "house": "faction",
+    "action": "ah"
+  },
+  {
+    "name": "Gem worth 22x vendor price sells on AH",
+    "item": {
+      "vendor": 100,
+      "market": 2200,
+      "saleRate": 0.25
+    },
+    "house": "faction",
+    "action": "ah"
+  },
+  {
+    "name": "Single linen cloth is not worth a listing",
+    "item": {
+      "vendor": 13,
+      "market": 85,
+      "saleRate": 0.55
+    },
+    "house": "faction",
+    "action": "vendor"
+  },
+  {
+    "name": "A stack of linen cloth is",
+    "item": {
+      "vendor": 13,
+      "market": 85,
+      "saleRate": 0.55,
+      "count": 20
+    },
+    "house": "faction",
+    "action": "ah"
+  }
+]

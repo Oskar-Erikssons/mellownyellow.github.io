@@ -1,12 +1,15 @@
 # Forever Guide
 
-En följeslagare till **World of Warcraft: Forever**. Den består av tre delar:
+En följeslagare till **World of Warcraft: Forever**. Den består av fyra delar:
 
 | Del | Var | Vad den gör |
 |---|---|---|
-| Webbsida | `index.html`, `app.js` | Väljer klass och ras, simulerar karaktären och jämför raser med samma utrustning. |
-| Addon | `addon/ForeverGuide`, `addon/ForeverGuide_Voices` | Läser upp quest-texter, NPC-dialog och böcker. Läser av stats och formler och räknar ut skada. |
-| Röstverktyg | `companion/` | Skapar AI-röster med öppen källkod av texterna som addonen har sparat. Hämtar data från Battle.net API. |
+| Webbsida | `index.html`, `app.js` | Väljer klass och ras, simulerar karaktären, ger säljråd för AH och visar historik över datauppdateringar. Har två teman och egna färger. |
+| Addon | `addon/ForeverGuide` | Läser upp quest-texter med en egen röst per NPC, simulerar skada och ger råd för auktionshuset. Har två teman och egna färger. |
+| Röstverktyg | `companion/forever_voice.py`, `quest_db.py` | Skapar AI-röster med öppen källkod, även zonpaket i förväg. |
+| Underhåll | `companion/patch_watch.py`, `build_data.py` | En lokal språkmodell läser patchnoter och uppdaterar speldatan. |
+
+All speldata (racials, stridsregler, AH-avgifter) ligger i `data/gamedata.json`. Både webben och addonen läser den, så en hotfix kräver ingen kodändring.
 
 ## Varför tre delar?
 
@@ -28,6 +31,9 @@ Kopiera båda mapparna i `addon/` till spelets `Interface/AddOns`.
 | `/fg sim` | Visar stats, formler sorterade efter skada per sekund och vad som höjer skadan mest. |
 | `/fg export` | Ger en text som du klistrar in i webbsimulatorn. |
 | `/fg target 3` | Räknar mot en fiende tre nivåer över dig (en boss). |
+| `/fg options` | Tema (Orgrimmar eller Stormwind), egna färger och inställningar. |
+| `/fg ah` | Säljråd för dina väskor, fynd och dina försäljningar. |
+| `/fg variety on\|off` | En egen inbyggd röst och ett eget tempo per NPC. |
 
 Quest-fönstret får också knappen **Read aloud**.
 
@@ -63,6 +69,41 @@ I `voices.example.json` finns regianvisningar per texttyp, till exempel `[warm, 
 
 Samma NPC får alltid samma röst. Verktyget läser bara addonens sparfil och skriver ljudfiler. Det rör aldrig spelet medan det körs.
 
+## Auktionshuset
+
+Forever har inget öppet API för auktionshuset. Addonen samlar därför priser på två sätt: med en fullskanning (högst en gång per 15 minuter) och från varje sökning du gör. Om servern stryper en skanning kommer den tillbaka tom. Då behåller addonen de gamla priserna.
+
+| Funktion | Hur |
+|---|---|
+| Marknadspris | Viktat snitt av de billigaste 30 % av utbudet, utan uppenbart överprissatta auktioner |
+| Historiskt pris | Glidande medelvärde över dina skanningar |
+| Säljchans | Auktioner som försvinner mellan två skanningar trots att de hade tid kvar räknas som sålda |
+| Handlare eller AH | Räknar med avgift, deposition och upp till tre försök. Säljs det inte, går det till handlaren. |
+| Fynd | Auktioner under handlarens pris |
+| Försäljningar | Läses från AH-posten och ger summa och bästa tid att lägga upp |
+| Säljknapp | Hos handlare: säljer grått och, om du vill, handelsvaror som är värda mer där |
+
+`python forever_ah.py --wow "..." --out prices.json` gör en fil som du öppnar på webbsidans flik Auktionshus.
+
+## Patchnoter med lokal språkmodell
+
+```bash
+ollama pull qwen3:14b
+python patch_watch.py --file hotfix.txt                 # visar förslag och skriver en rapport
+python patch_watch.py --fetch --apply --commit          # källor i patch_sources.json
+```
+
+Modellen får bara ändra `data/gamedata.json`. Varje ändring måste citera en mening som finns i patchnoterna, matcha det nuvarande värdet och hålla sig inom rimliga gränser. Därefter körs testerna, och vid fel rullas allt tillbaka. Kodförslag hamnar i `reports/`, så att du kan granska dem.
+
+## Zonpaket
+
+```bash
+python quest_db.py --sql classicdb.sql --out quests.json
+python forever_voice.py --wow "..." --quests quests.json --zone 12 --max-level 10
+```
+
+Addonen nycklar quest-texter på quest-ID och sparar ditt namn som `$N`. Därför passar ett zonpaket alla dina karaktärer. Quest-texterna tillhör Blizzard, så dela inte de skapade ljudfilerna.
+
 ## Battle.net API
 
 ```bash
@@ -78,7 +119,7 @@ Skriptet använder namespace för Classic Era (`classic1x`). Blizzard har inte s
 
 ```bash
 pip install lupa numpy soundfile requests
-python -m unittest discover tests      # addonens logik i Lua 5.1 och röstverktyget
+python -m unittest discover tests      # addonens logik i Lua 5.1 och alla verktyg
 node --test tests/app.test.js          # webbsidans beräkningar
 ```
 
@@ -88,3 +129,5 @@ node --test tests/app.test.js          # webbsidans beräkningar
 - Formlernas skada läses från tooltip-texten. Om Forever skriver tooltips på ett annat sätt kan vissa formler saknas.
 - Klasser, raser och racials följer 2004. Kontrollera dem om Blizzard ändrar något i Forever.
 - Nya ljudfiler syns först när spelet har startats om.
+- AH-avgifterna för neutrala auktionshus är osäkra. De ligger i `data/gamedata.json` och kan rättas där.
+- Det är oklart om Forever använder det moderna eller det klassiska auktions-API:et. Addonen stöder båda.

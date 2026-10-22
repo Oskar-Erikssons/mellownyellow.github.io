@@ -1,2 +1,5 @@
 __pycache__/
 *.pyc
+data/.patch_state.json
+prices.json
+quests.json

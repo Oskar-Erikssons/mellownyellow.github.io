@@ -57,6 +57,7 @@ def choose_voice(entry: dict, config: dict, defaults: dict) -> str:
     overrides = config.get("npc", {})
     if npc and npc in overrides:
         return overrides[npc]
+    # Quest log, books and pre-made zone packs have no NPC, so the narrator reads them.
     if entry.get("kind") in ("log", "book") or not npc:
         return config.get("narrator", defaults["narrator"])
     sex = "female" if entry.get("sex") == 3 else "male"
@@ -65,7 +66,19 @@ def choose_voice(entry: dict, config: dict, defaults: dict) -> str:
 
 # --- Text cleanup --------------------------------------------------------------
 
-def tts_text(text: str) -> str:
+def fill_template(text: str, player: str = "adventurer") -> str:
+    """Quest placeholders: $N name, $C class, $R race, $G male:female; and $B line break.
+
+    The addon stores your name as $N, so one clip works for every character."""
+    text = re.sub(r"\$[Gg]\s*([^:;]*):([^;]*);", r"\1", text)
+    text = re.sub(r"\$[Nn]", player, text)
+    text = re.sub(r"\$[Cc]", "adventurer", text)
+    text = re.sub(r"\$[Rr]", "traveler", text)
+    return re.sub(r"\$[Bb]", " ", text)
+
+
+def tts_text(text: str, player: str = "adventurer") -> str:
+    text = fill_template(text, player)
     text = re.sub(r"<[^>]*>", " ", text)          # emotes like <The dwarf laughs.>
     text = text.replace("|n", " ")
     text = re.sub(r"\s+", " ", text).strip()
@@ -214,6 +227,22 @@ def read_queue(files: list[Path]) -> dict[str, dict]:
     return queue
 
 
+def quest_entries(path: Path, zone: int | None, min_level: int, max_level: int) -> dict[str, dict]:
+    """Turns quests.json (from quest_db.py) into queue entries with the addon's keys."""
+    entries = {}
+    for q in json.loads(path.read_text(encoding="utf-8")):
+        level = q.get("level") or q.get("minLevel") or 0
+        if zone is not None and q.get("zone") != zone:
+            continue
+        if level and not (min_level <= level <= max_level):
+            continue
+        detail = f"{q['title']}. {q.get('details') or ''} {q.get('objectives') or ''}".strip()
+        for kind, text in (("detail", detail), ("progress", q.get("progress")), ("complete", q.get("complete"))):
+            if text and text.strip():
+                entries[f"{kind[0]}{q['id']}"] = {"kind": kind, "text": text, "quest": q["id"], "npc": None}
+    return entries
+
+
 def write_manifest(addon_dir: Path) -> int:
     import soundfile as sf
     sounds = sorted((addon_dir / "sounds").glob("*.ogg"))
@@ -251,6 +280,11 @@ def main(argv=None) -> int:
     ap.add_argument("--url", help="http engine: server base URL, e.g. http://localhost:8880/v1")
     ap.add_argument("--model", default="tts-1", help="http engine: model name, e.g. fish-audio/drama-3")
     ap.add_argument("--format", default="wav", help="http engine: audio format to ask for (wav, mp3)")
+    ap.add_argument("--quests", type=Path, help="quests.json from quest_db.py: voice quests before you meet them")
+    ap.add_argument("--zone", type=int, help="With --quests: only this zone ID")
+    ap.add_argument("--min-level", type=int, default=1)
+    ap.add_argument("--max-level", type=int, default=60)
+    ap.add_argument("--player-word", default="adventurer", help="Spoken instead of your name")
     ap.add_argument("--limit", type=int, default=0, help="Voice at most this many texts")
     ap.add_argument("--dry-run", action="store_true", help="Only list what would be voiced")
     args = ap.parse_args(argv)
@@ -261,14 +295,18 @@ def main(argv=None) -> int:
         files = find_saved_variables(args.wow)
     else:
         ap.error("give --wow or --saved")
+    if args.quests:
+        files = files or []
     addon_dir = args.addon or (args.wow / "Interface" / "AddOns" / "ForeverGuide_Voices" if args.wow else None)
     if not addon_dir:
         ap.error("give --wow or --addon")
-    if not files:
+    if not files and not args.quests:
         print("No ForeverGuide.lua found. Log in with the addon, read a quest and log out first.")
         return 1
 
     queue = read_queue(files)
+    if args.quests:
+        queue.update(quest_entries(args.quests, args.zone, args.min_level, args.max_level))
     sound_dir = addon_dir / "sounds"
     todo = {k: v for k, v in queue.items() if not (sound_dir / f"{k}.ogg").exists()}
     if args.limit:
@@ -281,7 +319,7 @@ def main(argv=None) -> int:
     if args.dry_run:
         for key, entry in todo.items():
             voice = choose_voice(entry, config, engine_cls.defaults)
-            print(f"{key} [{voice}] {entry.get('npc') or '-'}: {tts_text(entry['text'])[:90]}")
+            print(f"{key} [{voice}] {entry.get('npc') or '-'}: {tts_text(entry['text'], args.player_word)[:90]}")
         return 0
 
     if args.engine == "chatterbox":
@@ -296,7 +334,7 @@ def main(argv=None) -> int:
     sound_dir.mkdir(parents=True, exist_ok=True)
     for n, (key, entry) in enumerate(todo.items(), 1):
         voice = choose_voice(entry, config, engine_cls.defaults)
-        text = tts_text(entry["text"])
+        text = tts_text(entry["text"], args.player_word)
         if prefixes.get(entry.get("kind")):
             text = f"{prefixes[entry['kind']]} {text}"
         print(f"[{n}/{len(todo)}] {key} ({voice}) {text[:60]}")
