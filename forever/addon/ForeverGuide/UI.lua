@@ -166,6 +166,39 @@ function UI:ShowExport()
     self.export.edit:HighlightText()
 end
 
+-- Generic window with text you can copy (talent export).
+function UI:ShowCopy(title, text)
+    self.copies = self.copies or {}
+    local f = self.copies[title]
+    if not f then
+        f = makeWindow(title, 520, 220)
+        local scroll = CreateFrame("ScrollFrame", nil, f, "UIPanelScrollFrameTemplate")
+        scroll:SetPoint("TOPLEFT", 14, -40)
+        scroll:SetPoint("BOTTOMRIGHT", -32, 14)
+        f.edit = CreateFrame("EditBox", nil, scroll)
+        f.edit:SetMultiLine(true)
+        f.edit:SetFontObject(ChatFontNormal)
+        f.edit:SetWidth(460)
+        f.edit:SetAutoFocus(false)
+        f.edit:SetScript("OnEscapePressed", function() f:Hide() end)
+        scroll:SetScrollChild(f.edit)
+        self.copies[title] = f
+    end
+    f:Show()
+    f.edit:SetText(text)
+    f.edit:SetFocus()
+    f.edit:HighlightText()
+end
+
+function UI:ShowRoute()
+    if not self.route then
+        self.route = makeWindow("Forever Guide Route", 480, 400)
+        addScrollText(self.route)
+    end
+    self.route:SetBody(FG.Route:Text())
+    self.route:Show()
+end
+
 ------------------------------------------------------------------------
 -- Options: theme, colors and switches
 ------------------------------------------------------------------------

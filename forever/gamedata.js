@@ -654,7 +654,1098 @@
   },
   "tts": {
     "speakTextSignature": "12.0"
-  }
+  },
+  "zones": [
+    {
+      "name": "Elwynn Forest",
+      "min": 1,
+      "max": 10,
+      "faction": "Alliance",
+      "continent": "EK",
+      "note": "Startzon för människor."
+    },
+    {
+      "name": "Dun Morogh",
+      "min": 1,
+      "max": 10,
+      "faction": "Alliance",
+      "continent": "EK",
+      "note": "Startzon för dvärgar och gnomer."
+    },
+    {
+      "name": "Teldrassil",
+      "min": 1,
+      "max": 10,
+      "faction": "Alliance",
+      "continent": "KAL",
+      "note": "Startzon för nattalver."
+    },
+    {
+      "name": "Durotar",
+      "min": 1,
+      "max": 10,
+      "faction": "Horde",
+      "continent": "KAL",
+      "note": "Startzon för orcher och troll."
+    },
+    {
+      "name": "Mulgore",
+      "min": 1,
+      "max": 10,
+      "faction": "Horde",
+      "continent": "KAL",
+      "note": "Startzon för tauren."
+    },
+    {
+      "name": "Tirisfal Glades",
+      "min": 1,
+      "max": 10,
+      "faction": "Horde",
+      "continent": "EK",
+      "note": "Startzon för odöda."
+    },
+    {
+      "name": "Westfall",
+      "min": 10,
+      "max": 20,
+      "faction": "Alliance",
+      "continent": "EK",
+      "note": ""
+    },
+    {
+      "name": "Loch Modan",
+      "min": 10,
+      "max": 20,
+      "faction": "Alliance",
+      "continent": "EK",
+      "note": ""
+    },
+    {
+      "name": "Darkshore",
+      "min": 10,
+      "max": 20,
+      "faction": "Alliance",
+      "continent": "KAL",
+      "note": ""
+    },
+    {
+      "name": "The Barrens",
+      "min": 10,
+      "max": 25,
+      "faction": "Horde",
+      "continent": "KAL",
+      "note": "Hordens stora levlingszon."
+    },
+    {
+      "name": "Silverpine Forest",
+      "min": 10,
+      "max": 20,
+      "faction": "Horde",
+      "continent": "EK",
+      "note": ""
+    },
+    {
+      "name": "Redridge Mountains",
+      "min": 15,
+      "max": 25,
+      "faction": "Alliance",
+      "continent": "EK",
+      "note": ""
+    },
+    {
+      "name": "Stonetalon Mountains",
+      "min": 15,
+      "max": 27,
+      "faction": "Both",
+      "continent": "KAL",
+      "note": ""
+    },
+    {
+      "name": "Ashenvale",
+      "min": 18,
+      "max": 30,
+      "faction": "Both",
+      "continent": "KAL",
+      "note": ""
+    },
+    {
+      "name": "Duskwood",
+      "min": 18,
+      "max": 30,
+      "faction": "Alliance",
+      "continent": "EK",
+      "note": ""
+    },
+    {
+      "name": "Wetlands",
+      "min": 20,
+      "max": 30,
+      "faction": "Alliance",
+      "continent": "EK",
+      "note": ""
+    },
+    {
+      "name": "Hillsbrad Foothills",
+      "min": 20,
+      "max": 30,
+      "faction": "Both",
+      "continent": "EK",
+      "note": ""
+    },
+    {
+      "name": "Thousand Needles",
+      "min": 25,
+      "max": 35,
+      "faction": "Both",
+      "continent": "KAL",
+      "note": ""
+    },
+    {
+      "name": "Alterac Mountains",
+      "min": 30,
+      "max": 40,
+      "faction": "Both",
+      "continent": "EK",
+      "note": ""
+    },
+    {
+      "name": "Arathi Highlands",
+      "min": 30,
+      "max": 40,
+      "faction": "Both",
+      "continent": "EK",
+      "note": ""
+    },
+    {
+      "name": "Desolace",
+      "min": 30,
+      "max": 40,
+      "faction": "Both",
+      "continent": "KAL",
+      "note": ""
+    },
+    {
+      "name": "Stranglethorn Vale",
+      "min": 30,
+      "max": 45,
+      "faction": "Both",
+      "continent": "EK",
+      "note": "Mycket PvP på PvP-servrar."
+    },
+    {
+      "name": "Dustwallow Marsh",
+      "min": 35,
+      "max": 45,
+      "faction": "Both",
+      "continent": "KAL",
+      "note": ""
+    },
+    {
+      "name": "Badlands",
+      "min": 35,
+      "max": 45,
+      "faction": "Both",
+      "continent": "EK",
+      "note": ""
+    },
+    {
+      "name": "Swamp of Sorrows",
+      "min": 35,
+      "max": 45,
+      "faction": "Both",
+      "continent": "EK",
+      "note": ""
+    },
+    {
+      "name": "Feralas",
+      "min": 40,
+      "max": 50,
+      "faction": "Both",
+      "continent": "KAL",
+      "note": ""
+    },
+    {
+      "name": "Tanaris",
+      "min": 40,
+      "max": 50,
+      "faction": "Both",
+      "continent": "KAL",
+      "note": ""
+    },
+    {
+      "name": "The Hinterlands",
+      "min": 40,
+      "max": 50,
+      "faction": "Both",
+      "continent": "EK",
+      "note": ""
+    },
+    {
+      "name": "Searing Gorge",
+      "min": 43,
+      "max": 50,
+      "faction": "Both",
+      "continent": "EK",
+      "note": ""
+    },
+    {
+      "name": "Azshara",
+      "min": 45,
+      "max": 55,
+      "faction": "Both",
+      "continent": "KAL",
+      "note": ""
+    },
+    {
+      "name": "Blasted Lands",
+      "min": 45,
+      "max": 55,
+      "faction": "Both",
+      "continent": "EK",
+      "note": ""
+    },
+    {
+      "name": "Un'Goro Crater",
+      "min": 48,
+      "max": 55,
+      "faction": "Both",
+      "continent": "KAL",
+      "note": ""
+    },
+    {
+      "name": "Felwood",
+      "min": 48,
+      "max": 55,
+      "faction": "Both",
+      "continent": "KAL",
+      "note": ""
+    },
+    {
+      "name": "Burning Steppes",
+      "min": 50,
+      "max": 58,
+      "faction": "Both",
+      "continent": "EK",
+      "note": ""
+    },
+    {
+      "name": "Western Plaguelands",
+      "min": 51,
+      "max": 58,
+      "faction": "Both",
+      "continent": "EK",
+      "note": ""
+    },
+    {
+      "name": "Winterspring",
+      "min": 53,
+      "max": 60,
+      "faction": "Both",
+      "continent": "KAL",
+      "note": ""
+    },
+    {
+      "name": "Eastern Plaguelands",
+      "min": 53,
+      "max": 60,
+      "faction": "Both",
+      "continent": "EK",
+      "note": ""
+    },
+    {
+      "name": "Silithus",
+      "min": 55,
+      "max": 60,
+      "faction": "Both",
+      "continent": "KAL",
+      "note": ""
+    }
+  ],
+  "dungeons": [
+    {
+      "name": "Ragefire Chasm",
+      "min": 13,
+      "max": 18,
+      "faction": "Horde",
+      "continent": "KAL"
+    },
+    {
+      "name": "The Deadmines",
+      "min": 17,
+      "max": 26,
+      "faction": "Alliance",
+      "continent": "EK"
+    },
+    {
+      "name": "Wailing Caverns",
+      "min": 17,
+      "max": 24,
+      "faction": "Both",
+      "continent": "KAL"
+    },
+    {
+      "name": "Shadowfang Keep",
+      "min": 22,
+      "max": 30,
+      "faction": "Both",
+      "continent": "EK"
+    },
+    {
+      "name": "Blackfathom Deeps",
+      "min": 24,
+      "max": 32,
+      "faction": "Both",
+      "continent": "KAL"
+    },
+    {
+      "name": "The Stockade",
+      "min": 24,
+      "max": 32,
+      "faction": "Alliance",
+      "continent": "EK"
+    },
+    {
+      "name": "Gnomeregan",
+      "min": 29,
+      "max": 38,
+      "faction": "Both",
+      "continent": "EK"
+    },
+    {
+      "name": "Razorfen Kraul",
+      "min": 29,
+      "max": 38,
+      "faction": "Both",
+      "continent": "KAL"
+    },
+    {
+      "name": "Scarlet Monastery",
+      "min": 34,
+      "max": 45,
+      "faction": "Both",
+      "continent": "EK"
+    },
+    {
+      "name": "Razorfen Downs",
+      "min": 37,
+      "max": 46,
+      "faction": "Both",
+      "continent": "KAL"
+    },
+    {
+      "name": "Uldaman",
+      "min": 41,
+      "max": 51,
+      "faction": "Both",
+      "continent": "EK"
+    },
+    {
+      "name": "Zul'Farrak",
+      "min": 44,
+      "max": 54,
+      "faction": "Both",
+      "continent": "KAL"
+    },
+    {
+      "name": "Maraudon",
+      "min": 46,
+      "max": 55,
+      "faction": "Both",
+      "continent": "KAL"
+    },
+    {
+      "name": "Sunken Temple",
+      "min": 50,
+      "max": 60,
+      "faction": "Both",
+      "continent": "EK"
+    },
+    {
+      "name": "Blackrock Depths",
+      "min": 52,
+      "max": 60,
+      "faction": "Both",
+      "continent": "EK"
+    }
+  ],
+  "startZones": {
+    "Human": "Elwynn Forest",
+    "Dwarf": "Dun Morogh",
+    "Gnome": "Dun Morogh",
+    "NightElf": "Teldrassil",
+    "Orc": "Durotar",
+    "Troll": "Durotar",
+    "Tauren": "Mulgore",
+    "Scourge": "Tirisfal Glades"
+  },
+  "milestones": [
+    {
+      "level": 10,
+      "class": "ALL",
+      "text": "Första talangpoängen. Öppna talangplaneraren."
+    },
+    {
+      "level": 40,
+      "class": "ALL",
+      "text": "Ridning och första riddjuret. Spara guld från nivå 30."
+    },
+    {
+      "level": 60,
+      "class": "ALL",
+      "text": "Maxnivå: dungeons, raider och episkt riddjur."
+    },
+    {
+      "level": 10,
+      "class": "WARRIOR",
+      "text": "Klassquest: Defensive Stance."
+    },
+    {
+      "level": 30,
+      "class": "WARRIOR",
+      "text": "Klassquest: Berserker Stance och Whirlwind Axe."
+    },
+    {
+      "level": 12,
+      "class": "PALADIN",
+      "text": "Klassquest: Redemption."
+    },
+    {
+      "level": 40,
+      "class": "PALADIN",
+      "text": "Klassquest: paladinens riddjur."
+    },
+    {
+      "level": 10,
+      "class": "HUNTER",
+      "text": "Klassquest: tämj ditt första husdjur."
+    },
+    {
+      "level": 16,
+      "class": "ROGUE",
+      "text": "Klassquest: Lockpicking."
+    },
+    {
+      "level": 20,
+      "class": "ROGUE",
+      "text": "Klassquest: gifter."
+    },
+    {
+      "level": 4,
+      "class": "SHAMAN",
+      "text": "Klassquest: Earth-totem."
+    },
+    {
+      "level": 10,
+      "class": "SHAMAN",
+      "text": "Klassquest: Fire-totem."
+    },
+    {
+      "level": 20,
+      "class": "SHAMAN",
+      "text": "Klassquest: Water-totem."
+    },
+    {
+      "level": 30,
+      "class": "SHAMAN",
+      "text": "Klassquest: Air-totem."
+    },
+    {
+      "level": 10,
+      "class": "WARLOCK",
+      "text": "Klassquest: Voidwalker."
+    },
+    {
+      "level": 20,
+      "class": "WARLOCK",
+      "text": "Klassquest: Succubus."
+    },
+    {
+      "level": 30,
+      "class": "WARLOCK",
+      "text": "Klassquest: Felhunter."
+    },
+    {
+      "level": 40,
+      "class": "WARLOCK",
+      "text": "Felsteed: gratis riddjur från tränaren."
+    },
+    {
+      "level": 10,
+      "class": "DRUID",
+      "text": "Klassquest: Bear Form."
+    },
+    {
+      "level": 16,
+      "class": "DRUID",
+      "text": "Klassquest: Aquatic Form."
+    },
+    {
+      "level": 20,
+      "class": "DRUID",
+      "text": "Cat Form hos tränaren."
+    },
+    {
+      "level": 30,
+      "class": "DRUID",
+      "text": "Travel Form hos tränaren."
+    }
+  ],
+  "talentTemplates": {
+    "MAGE": [
+      {
+        "name": "Frost för levling",
+        "role": "dps",
+        "spec": "Frost",
+        "picks": [
+          [
+            "Improved Frostbolt",
+            5
+          ],
+          [
+            "Ice Shards",
+            5
+          ],
+          [
+            "Piercing Ice",
+            3
+          ],
+          [
+            "Improved Blizzard",
+            2
+          ],
+          [
+            "Shatter",
+            5
+          ],
+          [
+            "Frost Channeling",
+            3
+          ],
+          [
+            "Ice Block",
+            1
+          ],
+          [
+            "Improved Cone of Cold",
+            3
+          ],
+          [
+            "Arctic Reach",
+            2
+          ],
+          [
+            "Winter's Chill",
+            1
+          ],
+          [
+            "Ice Barrier",
+            1
+          ],
+          [
+            "Arcane Subtlety",
+            2
+          ],
+          [
+            "Arcane Focus",
+            3
+          ]
+        ]
+      }
+    ],
+    "WARRIOR": [
+      {
+        "name": "Arms för levling",
+        "role": "dps",
+        "spec": "Arms",
+        "picks": [
+          [
+            "Improved Heroic Strike",
+            3
+          ],
+          [
+            "Deflection",
+            2
+          ],
+          [
+            "Tactical Mastery",
+            5
+          ],
+          [
+            "Improved Rend",
+            3
+          ],
+          [
+            "Improved Charge",
+            2
+          ],
+          [
+            "Anger Management",
+            1
+          ],
+          [
+            "Deep Wounds",
+            3
+          ],
+          [
+            "Two-Handed Weapon Specialization",
+            5
+          ],
+          [
+            "Impale",
+            2
+          ],
+          [
+            "Axe Specialization",
+            5
+          ],
+          [
+            "Sweeping Strikes",
+            1
+          ],
+          [
+            "Improved Overpower",
+            2
+          ],
+          [
+            "Mortal Strike",
+            1
+          ]
+        ]
+      }
+    ],
+    "HUNTER": [
+      {
+        "name": "Beast Mastery för levling",
+        "role": "dps",
+        "spec": "Beast Mastery",
+        "picks": [
+          [
+            "Improved Aspect of the Hawk",
+            5
+          ],
+          [
+            "Endurance Training",
+            5
+          ],
+          [
+            "Improved Revive Pet",
+            2
+          ],
+          [
+            "Thick Hide",
+            3
+          ],
+          [
+            "Unleashed Fury",
+            5
+          ],
+          [
+            "Ferocity",
+            5
+          ],
+          [
+            "Intimidation",
+            1
+          ],
+          [
+            "Bestial Discipline",
+            2
+          ],
+          [
+            "Frenzy",
+            5
+          ],
+          [
+            "Bestial Wrath",
+            1
+          ],
+          [
+            "Lethal Shots",
+            5
+          ],
+          [
+            "Efficiency",
+            5
+          ]
+        ]
+      }
+    ],
+    "ROGUE": [
+      {
+        "name": "Combat för levling",
+        "role": "dps",
+        "spec": "Combat",
+        "picks": [
+          [
+            "Improved Sinister Strike",
+            2
+          ],
+          [
+            "Improved Backstab",
+            3
+          ],
+          [
+            "Lightning Reflexes",
+            5
+          ],
+          [
+            "Precision",
+            5
+          ],
+          [
+            "Dual Wield Specialization",
+            5
+          ],
+          [
+            "Riposte",
+            1
+          ],
+          [
+            "Improved Sprint",
+            2
+          ],
+          [
+            "Sword Specialization",
+            5
+          ],
+          [
+            "Blade Flurry",
+            1
+          ],
+          [
+            "Weapon Expertise",
+            2
+          ],
+          [
+            "Aggression",
+            3
+          ],
+          [
+            "Adrenaline Rush",
+            1
+          ],
+          [
+            "Malice",
+            5
+          ],
+          [
+            "Ruthlessness",
+            3
+          ],
+          [
+            "Murder",
+            2
+          ],
+          [
+            "Relentless Strikes",
+            1
+          ]
+        ]
+      }
+    ],
+    "PRIEST": [
+      {
+        "name": "Shadow för levling",
+        "role": "dps",
+        "spec": "Shadow",
+        "picks": [
+          [
+            "Spirit Tap",
+            5
+          ],
+          [
+            "Improved Shadow Word: Pain",
+            2
+          ],
+          [
+            "Blackout",
+            5
+          ],
+          [
+            "Shadow Focus",
+            3
+          ],
+          [
+            "Improved Mind Blast",
+            5
+          ],
+          [
+            "Mind Flay",
+            1
+          ],
+          [
+            "Shadow Reach",
+            3
+          ],
+          [
+            "Shadow Weaving",
+            5
+          ],
+          [
+            "Vampiric Embrace",
+            1
+          ],
+          [
+            "Darkness",
+            5
+          ],
+          [
+            "Shadowform",
+            1
+          ],
+          [
+            "Wand Specialization",
+            5
+          ],
+          [
+            "Improved Power Word: Shield",
+            3
+          ]
+        ]
+      }
+    ],
+    "WARLOCK": [
+      {
+        "name": "Affliction för levling",
+        "role": "dps",
+        "spec": "Affliction",
+        "picks": [
+          [
+            "Improved Corruption",
+            5
+          ],
+          [
+            "Improved Drain Life",
+            5
+          ],
+          [
+            "Fel Concentration",
+            5
+          ],
+          [
+            "Improved Life Tap",
+            2
+          ],
+          [
+            "Nightfall",
+            2
+          ],
+          [
+            "Grim Reach",
+            2
+          ],
+          [
+            "Siphon Life",
+            1
+          ],
+          [
+            "Shadow Mastery",
+            5
+          ],
+          [
+            "Dark Pact",
+            1
+          ],
+          [
+            "Improved Healthstone",
+            2
+          ],
+          [
+            "Demonic Embrace",
+            5
+          ],
+          [
+            "Improved Voidwalker",
+            3
+          ],
+          [
+            "Fel Intellect",
+            3
+          ]
+        ]
+      }
+    ],
+    "DRUID": [
+      {
+        "name": "Feral för levling",
+        "role": "dps",
+        "spec": "Feral Combat",
+        "picks": [
+          [
+            "Ferocity",
+            5
+          ],
+          [
+            "Feral Instinct",
+            5
+          ],
+          [
+            "Brutal Impact",
+            2
+          ],
+          [
+            "Thick Hide",
+            5
+          ],
+          [
+            "Feline Swiftness",
+            2
+          ],
+          [
+            "Sharpened Claws",
+            3
+          ],
+          [
+            "Predatory Strikes",
+            3
+          ],
+          [
+            "Blood Frenzy",
+            2
+          ],
+          [
+            "Primal Fury",
+            2
+          ],
+          [
+            "Savage Fury",
+            2
+          ],
+          [
+            "Faerie Fire (Feral)",
+            1
+          ],
+          [
+            "Heart of the Wild",
+            5
+          ],
+          [
+            "Leader of the Pack",
+            1
+          ],
+          [
+            "Furor",
+            5
+          ]
+        ]
+      }
+    ],
+    "SHAMAN": [
+      {
+        "name": "Enhancement för levling",
+        "role": "dps",
+        "spec": "Enhancement",
+        "picks": [
+          [
+            "Ancestral Knowledge",
+            5
+          ],
+          [
+            "Shield Specialization",
+            5
+          ],
+          [
+            "Thundering Strikes",
+            5
+          ],
+          [
+            "Improved Lightning Shield",
+            3
+          ],
+          [
+            "Two-Handed Axes and Maces",
+            1
+          ],
+          [
+            "Anticipation",
+            5
+          ],
+          [
+            "Flurry",
+            5
+          ],
+          [
+            "Toughness",
+            1
+          ],
+          [
+            "Elemental Weapons",
+            3
+          ],
+          [
+            "Parry",
+            1
+          ],
+          [
+            "Weapon Mastery",
+            5
+          ],
+          [
+            "Stormstrike",
+            1
+          ]
+        ]
+      }
+    ],
+    "PALADIN": [
+      {
+        "name": "Retribution för levling",
+        "role": "dps",
+        "spec": "Retribution",
+        "picks": [
+          [
+            "Improved Blessing of Might",
+            5
+          ],
+          [
+            "Benediction",
+            5
+          ],
+          [
+            "Improved Judgement",
+            2
+          ],
+          [
+            "Improved Seal of the Crusader",
+            3
+          ],
+          [
+            "Deflection",
+            5
+          ],
+          [
+            "Vindication",
+            3
+          ],
+          [
+            "Conviction",
+            5
+          ],
+          [
+            "Seal of Command",
+            1
+          ],
+          [
+            "Two-Handed Weapon Specialization",
+            3
+          ],
+          [
+            "Sanctity Aura",
+            1
+          ],
+          [
+            "Vengeance",
+            5
+          ],
+          [
+            "Repentance",
+            1
+          ]
+        ]
+      }
+    ]
+  },
+  "talentNotes": "Mallarna listar talanger i den ordning de tas. Namn och nivåer kontrolleras mot trädet som du exporterar från spelet med /fg talents export."
 };
   data.changelog = [
   {

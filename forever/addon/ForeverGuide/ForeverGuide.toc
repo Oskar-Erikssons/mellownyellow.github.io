@@ -2,7 +2,7 @@
 ## Title: Forever Guide
 ## Notes: Quest narrator with many voices, stat/spell simulator and auction house advisor for WoW: Forever.
 ## Author: Oskar Eriksson
-## Version: 0.2.0
+## Version: 0.3.0
 ## SavedVariables: ForeverGuideDB
 ## OptionalDeps: ForeverGuide_Voices
 
@@ -12,4 +12,5 @@ Theme.lua
 Narrator.lua
 Sim.lua
 Auction.lua
+Route.lua
 UI.lua

@@ -34,6 +34,8 @@ Kopiera båda mapparna i `addon/` till spelets `Interface/AddOns`.
 | `/fg options` | Tema (Orgrimmar eller Stormwind), egna färger och inställningar. |
 | `/fg ah` | Säljråd för dina väskor, fynd och dina försäljningar. |
 | `/fg variety on\|off` | En egen inbyggd röst och ett eget tempo per NPC. |
+| `/fg route` | Var du bör levla, dungeons och kommande klassquests. |
+| `/fg talents` | Nästa talang enligt mallen. `/fg talents export` ger trädet till webbens talangplanerare. |
 
 Quest-fönstret får också knappen **Read aloud**.
 

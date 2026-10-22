@@ -3,7 +3,7 @@ local ADDON, FG = ...
 FG = FG or {}
 _G.ForeverGuide = FG
 
-FG.VERSION = "0.2.0"
+FG.VERSION = "0.3.0"
 
 local DEFAULTS = {
     autoRead = true,      -- read quest text automatically when an NPC shows it
@@ -25,7 +25,8 @@ local DEFAULTS = {
     house = "auto",       -- "auto", "faction" or "neutral" auction house
     duration = "24",      -- auction length used in the advice: "2", "8" or "24" hours
     sellJunk = true,      -- merchant button sells grey items
-    sellAdvised = false,  -- merchant button also sells trade goods the advice says to vendor
+    sellAdvised = false,
+    talentTemplate = 1,   -- which template in GameData.talentTemplates to follow  -- merchant button also sells trade goods the advice says to vendor
 }
 
 FG.events = CreateFrame("Frame")
@@ -121,6 +122,8 @@ local HELP = {
     "/fg ah - auction house: prices, advice, flips and sales",
     "/fg house auto|faction|neutral - which auction house prices to use",
     "/fg tooltip on|off - prices in item tooltips",
+    "/fg route - where to level, dungeons and class quests coming up",
+    "/fg talents - next talent point; /fg talents export for the web planner",
 }
 
 local function onOff(arg, key)
@@ -154,6 +157,14 @@ SlashCmdList.FOREVERGUIDE = function(msg)
         FG:Print("house = " .. a)
     elseif cmd == "options" or cmd == "theme" then
         FG.UI:ShowOptions()
+    elseif cmd == "route" then
+        FG.UI:ShowRoute()
+    elseif cmd == "talents" and a == "export" then
+        local text = FG.Talents:Export()
+        if text then FG.UI:ShowCopy("Forever Guide Talents", text) else FG:Print("This client has no talent API.") end
+    elseif cmd == "talents" then
+        local n = FG.Talents:Next()
+        FG:Print(n and string.format("Next talent: %s (rank %d)", n.name, n.rank) or "No template for your class, or your build is complete.")
     elseif cmd == "ah" then
         FG.UI:ShowAuction()
     elseif cmd == "mode" and (a == "voices" or a == "builtin" or a == "both") then

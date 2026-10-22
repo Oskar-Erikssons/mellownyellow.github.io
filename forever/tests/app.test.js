@@ -78,3 +78,46 @@ test("generated gamedata.js is in sync with data/gamedata.json", () => {
   const src = JSON.parse(require("fs").readFileSync(__dirname + "/../data/gamedata.json", "utf8"));
   assert.deepEqual({ ...data, changelog: undefined }, { ...src, changelog: undefined });
 });
+
+// A small made-up tree: tier 2 needs 5 points, "Deep" needs "Base" maxed.
+const TREE = "FGT1&class=MAGE&tabs=Arcane|Fire|Frost&t=" + [
+  "3:1:1:5:0:0:0:Base", "3:1:2:3:0:0:0:Side", "3:2:1:2:1:1:0:Deep", "3:2:2:1:0:0:0:Other", "1:1:1:2:0:0:1:Arc",
+].join(";");
+
+test("route covers every level once and stays in the faction", () => {
+  for (const race of Object.keys(FG.RACES)) {
+    const steps = FG.planRoute(race, FG.RACES[race].classes[0]);
+    let next = 1;
+    for (const st of steps) { assert.equal(st.from, next, race); next = st.to + 1; assert.ok(st.zones.length > 0, `${race} ${st.from}`); }
+    assert.equal(next, 61);
+    const fac = FG.RACES[race].faction;
+    for (const st of steps) for (const z of st.zones) assert.ok(z.faction === "Both" || z.faction === fac);
+  }
+  assert.equal(FG.planRoute("Tauren", "DRUID")[0].zones[0].name, "Mulgore");
+  assert.ok(FG.planRoute("Orc", "WARLOCK").some((s) => s.milestones.some((m) => m.text.includes("Voidwalker"))));
+});
+
+test("talent tree parsing and rules", () => {
+  const t = FG.parseTalents(TREE);
+  assert.deepEqual(t.tabs, ["Arcane", "Fire", "Frost"]);
+  assert.equal(t.ranks.Arc, 1);
+  const deep = t.talents.find((x) => x.name === "Deep");
+  assert.match(FG.canAdd(t, {}, deep), /Kräver 5 poäng/);
+  assert.match(FG.canAdd(t, { Side: 3, Base: 2 }, deep), /Base fullt/);
+  assert.equal(FG.canAdd(t, { Base: 5 }, deep), null);
+  assert.equal(FG.canRemove(t, { Base: 5, Deep: 1 }, t.talents[0]), false);
+  assert.equal(FG.canRemove(t, { Base: 5, Side: 1, Deep: 1 }, t.talents[1]), true);
+});
+
+test("template schedule and problems", () => {
+  const t = FG.parseTalents(TREE);
+  const res = FG.applyTemplate(t, { picks: [["Base", 5], ["Deep", 2], ["Missing", 1], ["Other", 1]] }, 60);
+  assert.deepEqual(res.schedule.map((p) => p.level), [10, 11, 12, 13, 14, 15, 16, 17]);
+  assert.equal(res.ranks.Deep, 2);
+  assert.deepEqual(res.problems, ["Missing finns inte i trädet"]);
+  assert.equal(FG.applyTemplate(t, { picks: [["Base", 5]] }, 12).schedule.length, 3);
+  for (const [cls, list] of Object.entries(FG.DATA.talentTemplates)) {
+    const pts = list[0].picks.reduce((a, p) => a + p[1], 0);
+    assert.ok(pts <= 51, `${cls} template uses ${pts} points`);
+  }
+});

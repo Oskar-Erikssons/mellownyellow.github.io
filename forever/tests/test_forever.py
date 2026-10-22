@@ -177,7 +177,7 @@ class AddonLuaTests(unittest.TestCase):
         self.lua = lupa.LuaRuntime(unpack_returned_tuples=True)
         self.lua.execute(WOW_STUBS)
         self.fg = self.lua.eval("{}")
-        for name in ("Core.lua", "GameData.lua", "Theme.lua", "Narrator.lua", "Sim.lua", "Auction.lua", "UI.lua"):
+        for name in ("Core.lua", "GameData.lua", "Theme.lua", "Narrator.lua", "Sim.lua", "Auction.lua", "Route.lua", "UI.lua"):
             chunk = self.lua.execute("return function(src, name) return assert((loadstring or load)(src, name)) end")(
                 (ADDON / name).read_text(encoding="utf-8"), name)
             chunk("ForeverGuide", self.fg)
@@ -303,6 +303,31 @@ class AuctionLuaTests(AddonLuaTests):
         self.assertEqual(T.Hex(T, "accent"), "ffff0000")
         T.Reset(T)
         self.assertNotEqual(T.Hex(T, "accent"), "ffff0000")
+
+
+class RouteLuaTests(AddonLuaTests):
+    def test_zones_for_level(self):
+        zones, dungeons = self.fg.Route.ForLevel(22, "Alliance", "Human", "EK")
+        names = [zones[i + 1].name for i in range(len(zones))]
+        self.assertIn("Duskwood", names)
+        self.assertNotIn("The Barrens", names)
+        self.assertEqual(zones[1].continent, "EK")
+        start = self.fg.Route.ForLevel(3, "Horde", "Scourge", None)
+        self.assertEqual(start[0][1].name, "Tirisfal Glades")
+
+    def test_milestones_for_class(self):
+        ms = self.fg.Route.Milestones(8, "WARLOCK", 5)
+        self.assertEqual([ms[i + 1].text for i in range(len(ms))][:2], ["Första talangpoängen. Öppna talangplaneraren.", "Klassquest: Voidwalker."])
+
+    def test_next_talent_from_template(self):
+        tpl = self.lua.eval('{ picks = { { "A", 2 }, { "B", 1 }, { "A", 1 } } }')
+        nxt = self.fg.Talents.NextFromTemplate
+        self.assertEqual(nxt(tpl, self.lua.eval("{}")).name, "A")
+        n = nxt(tpl, self.lua.eval("{ A = 2 }"))
+        self.assertEqual((n.name, n.rank), ("B", 1))
+        n = nxt(tpl, self.lua.eval("{ A = 2, B = 1 }"))
+        self.assertEqual((n.name, n.rank), ("A", 3))
+        self.assertIsNone(nxt(tpl, self.lua.eval("{ A = 3, B = 1 }")))
 
 
 class GeneratedDataTests(unittest.TestCase):

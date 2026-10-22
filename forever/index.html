@@ -146,6 +146,28 @@
   .timeline .entry { position: relative; margin-bottom: 18px; }
   .timeline .entry::before { content: ""; position: absolute; left: -25px; top: 6px; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); }
 
+  /* Route */
+  .route-step { display: grid; grid-template-columns: 86px 1fr; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .route-step:last-child { border-bottom: 0; }
+  .lvl { font-family: Cinzel, Georgia, serif; color: var(--title); font-size: 20px; line-height: 1.2; }
+  .zone-main { font-weight: 600; font-size: 17px; }
+  .pill { display: inline-block; font-size: 13px; padding: 2px 10px; border-radius: 999px; background: var(--surface-2); margin: 3px 4px 0 0; }
+  .pill.ms { background: var(--accent-soft); color: var(--text); border: 1px solid var(--accent); }
+
+  /* Talent trees */
+  .trees { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+  .tree { background: var(--surface-2); border-radius: var(--radius); padding: 12px; }
+  .tree h3 { margin: 0 0 10px; display: flex; justify-content: space-between; }
+  .tgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .tal { aspect-ratio: 1; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--text); font: inherit; font-size: 10.5px; line-height: 1.15; padding: 4px; cursor: pointer; position: relative; display: flex; align-items: center; justify-content: center; text-align: center; overflow: hidden; }
+  .tal.locked { opacity: .45; }
+  .tal.some { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+  .tal.full { background: var(--accent); color: var(--accent-ink, #fff); border-color: var(--accent); }
+  .tal .r { position: absolute; right: 4px; bottom: 2px; font-size: 11px; font-weight: 700; }
+  .tal:hover:not(.locked) { transform: translateY(-1px); }
+  .schedule { columns: 2 220px; font-size: 14px; }
+  .schedule div { break-inside: avoid; padding: 2px 0; }
+
   /* Color drawer */
   .drawer { position: fixed; inset: 0 0 0 auto; width: min(360px, 100%); background: var(--surface); border-left: 1px solid var(--line); box-shadow: var(--shadow); z-index: 20; padding: 20px; overflow-y: auto; transform: translateX(100%); transition: transform .25s ease; }
   .drawer.open { transform: none; }
@@ -174,6 +196,8 @@
   <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="i-box" viewBox="0 0 24 24"><path d="M3 7l9-4 9 4-9 4zM3 7v10l9 4 9-4V7M12 11v10" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
   <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5L18 18M18 6l-2.5 2.5M8.5 15.5L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-map" viewBox="0 0 24 24"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2zM9 4v14M15 6v14" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="i-tree" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="6" cy="19" r="2.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="18" cy="19" r="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7.5v4M12 11.5L6.5 16.5M12 11.5l5.5 5" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
   <symbol id="i-palette" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.5-.8 1.5-1.6 0-1.4-1.3-1.6-1.3-2.9 0-.9.7-1.5 1.6-1.5H16a5 5 0 0 0 5-5c0-3.9-4-7-9-7z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="7.5" cy="11" r="1.4" fill="currentColor"/><circle cx="11" cy="7.5" r="1.4" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1.4" fill="currentColor"/></symbol>
 </svg>
 
@@ -203,6 +227,8 @@
 <nav aria-label="Avsnitt"><div class="inner" role="tablist">
   <button role="tab" data-tab="advisor" aria-selected="true"><svg><use href="#i-compass"/></svg>Klass & ras</button>
   <button role="tab" data-tab="sim" aria-selected="false"><svg><use href="#i-chart"/></svg>Simulator</button>
+  <button role="tab" data-tab="route" aria-selected="false"><svg><use href="#i-map"/></svg>Levlingsrutt</button>
+  <button role="tab" data-tab="talents" aria-selected="false"><svg><use href="#i-tree"/></svg>Talanger</button>
   <button role="tab" data-tab="auction" aria-selected="false"><svg><use href="#i-coin"/></svg>Auktionshus</button>
   <button role="tab" data-tab="voice" aria-selected="false"><svg><use href="#i-voice"/></svg>Uppläsning</button>
   <button role="tab" data-tab="updates" aria-selected="false"><svg><use href="#i-refresh"/></svg>Uppdateringar</button>
@@ -263,6 +289,42 @@
     <div class="row"><button class="btn" id="run" type="button">Simulera</button></div>
   </div>
   <div id="sim-result" aria-live="polite"></div>
+</section>
+
+<!-- ============ Route ============ -->
+<section id="route" role="tabpanel" hidden>
+  <div class="card">
+    <h2>Din levlingsrutt</h2>
+    <p class="lead">Rutten håller dig på samma kontinent så länge det går, eftersom resor tar tid. Den visar också dungeons och klassquests för varje steg. Skriv <code>/fg route</code> i spelet för samma råd där du står.</p>
+    <div class="fields">
+      <label>Ras<select id="r-race"></select></label>
+      <label>Klass<select id="r-class"></select></label>
+      <label>Från nivå<input type="number" id="r-from" min="1" max="60" value="1"></label>
+      <label>Till nivå<input type="number" id="r-to" min="1" max="60" value="60"></label>
+    </div>
+  </div>
+  <div class="card" id="route-out" aria-live="polite"></div>
+</section>
+
+<!-- ============ Talents ============ -->
+<section id="talents" role="tabpanel" hidden>
+  <div class="card">
+    <h2>Talangplanerare</h2>
+    <p class="lead">Välj en mall och se vilken talang du tar på varje nivå. Klistra in trädet från spelet (<code>/fg talents export</code>) för att planera fritt: klicka för att lägga till, högerklicka eller Shift-klicka för att ta bort.</p>
+    <div class="fields">
+      <label>Klass<select id="t-class"></select></label>
+      <label>Mall<select id="t-template"></select></label>
+      <label>Nivå: <strong id="t-level-out">60</strong><input type="range" id="t-level" min="10" max="60" value="60"></label>
+    </div>
+    <textarea id="t-import" placeholder="FGT1&class=MAGE&tabs=Arcane|Fire|Frost&t=..." aria-label="Talangträd från spelet" style="margin-top:12px"></textarea>
+    <div class="row">
+      <button class="btn" type="button" id="t-load">Läs in träd</button>
+      <button class="btn ghost" type="button" id="t-apply">Använd mallen</button>
+      <button class="btn ghost" type="button" id="t-reset">Nollställ</button>
+      <span id="t-msg" class="small" aria-live="polite"></span>
+    </div>
+  </div>
+  <div id="t-out" aria-live="polite"></div>
 </section>
 
 <!-- ============ Auction ============ -->
@@ -368,6 +430,8 @@ python companion/patch_watch.py --fetch --apply --commit     # hämtar, tillämp
       <thead><tr><th>Kommando</th><th>Funktion</th></tr></thead>
       <tbody>
         <tr><td><code>/fg options</code></td><td>Tema, egna färger och inställningar</td></tr>
+        <tr><td><code>/fg route</code></td><td>Var du bör levla, dungeons och kommande klassquests</td></tr>
+        <tr><td><code>/fg talents</code></td><td>Nästa talang enligt mallen. <code>/fg talents export</code> ger trädet till webben.</td></tr>
         <tr><td><code>/fg ah</code></td><td>Säljråd för dina väskor, fynd och dina försäljningar</td></tr>
         <tr><td><code>/fg read</code></td><td>Läser upp den valda questen i questloggen</td></tr>
         <tr><td><code>/fg sim</code></td><td>Stats, formler och vad som höjer skadan mest</td></tr>
@@ -415,7 +479,6 @@ python patch_watch.py --fetch                                              # pat
         <li><strong>Äventyrsdagbok</strong> på webben med alla quests du läst</li>
         <li><strong>Hardcore-varning</strong> med röst vid låg hälsa och farliga fiender</li>
         <li><strong>Uppgraderingsråd</strong> i tooltipen utifrån simulatorns statvikter</li>
-        <li><strong>Levlingsrutt</strong> utifrån nivå, klass och fraktion</li>
       </ul>
       <h3>Inom reglerna</h3>
       <p class="small">Allt bygger på det Blizzard tillåter. Addonen agerar bara när du klickar. Verktygen läser addonens sparfil och rör aldrig spelet medan det körs.</p>
@@ -780,6 +843,105 @@ python patch_watch.py --fetch                                              # pat
       renderAH();
     }));
   }
+
+  // ---------------- Leveling route ----------------
+  const raceOpts = Object.entries(FG.RACES).map(([k, r]) => `<option value="${k}">${esc(r.name)} (${r.faction})</option>`).join("");
+  $("#r-race").innerHTML = raceOpts;
+  function fillRouteClasses() {
+    const r = FG.RACES[$("#r-race").value], keep = $("#r-class").value;
+    $("#r-class").innerHTML = r.classes.map((c) => `<option value="${c}" ${c === keep ? "selected" : ""}>${esc(FG.CLASSES[c].name)}</option>`).join("");
+  }
+  function renderRoute() {
+    const from = Math.max(1, Math.min(60, +$("#r-from").value || 1)), to = Math.max(from, Math.min(60, +$("#r-to").value || 60));
+    const steps = FG.planRoute($("#r-race").value, $("#r-class").value, from, to);
+    const CONT = { EK: "Eastern Kingdoms", KAL: "Kalimdor" };
+    $("#route-out").innerHTML = steps.map((st) => `<div class="route-step">
+        <div class="lvl">${st.from}–${st.to}</div>
+        <div>
+          ${st.zones[0] ? `<div class="zone-main">${esc(st.zones[0].name)} <span class="tag">${CONT[st.zones[0].continent]}</span></div>
+          ${st.zones[0].note ? `<div class="small muted">${esc(st.zones[0].note)}</div>` : ""}
+          ${st.zones.length > 1 ? `<div class="small muted">Alternativ: ${st.zones.slice(1).map((z) => esc(z.name)).join(", ")}</div>` : ""}` : `<div class="muted">Ingen zon hittades.</div>`}
+          <div>${st.dungeons.map((d) => `<span class="pill">${esc(d.name)} ${d.min}–${d.max}</span>`).join("")}
+          ${st.milestones.map((m) => `<span class="pill ms">Nivå ${m.level}: ${esc(m.text)}</span>`).join("")}</div>
+        </div></div>`).join("");
+  }
+  $("#r-race").addEventListener("change", () => { fillRouteClasses(); renderRoute(); });
+  ["#r-class", "#r-from", "#r-to"].forEach((id) => $(id).addEventListener("input", renderRoute));
+  fillRouteClasses(); renderRoute();
+
+  // ---------------- Talent planner ----------------
+  const TT = FG.DATA.talentTemplates;
+  $("#t-class").innerHTML = Object.keys(FG.CLASSES).map((c) => `<option value="${c}">${esc(FG.CLASSES[c].name)}</option>`).join("");
+  let tree = null, ranks = {};
+  function savedTree(cls) { try { return JSON.parse(store.get("fg-tree-" + cls, "null")); } catch (e) { return null; } }
+  function fillTemplates() {
+    const list = TT[$("#t-class").value] || [];
+    $("#t-template").innerHTML = list.map((t, i) => `<option value="${i}">${esc(t.name)}</option>`).join("") || `<option>Ingen mall</option>`;
+  }
+  function selectedTemplate() { return (TT[$("#t-class").value] || [])[+$("#t-template").value || 0]; }
+  const level = () => +$("#t-level").value;
+  const spent = () => Object.values(ranks).reduce((a, b) => a + b, 0);
+
+  function renderTalents() {
+    $("#t-level-out").textContent = level();
+    const tpl = selectedTemplate();
+    let html = "";
+    if (tree) {
+      const left = FG.pointsAt(level()) - spent();
+      html += `<div class="card"><h2>${esc(FG.CLASSES[tree.class]?.name || tree.class)}: ${tree.tabs.map((t, i) => tree.talents.filter((x) => x.tab === i + 1).reduce((a, x) => a + (ranks[x.name] || 0), 0)).join(" / ")}</h2>
+        <p class="small ${left < 0 ? "neg" : "muted"}">${left >= 0 ? `${left} poäng kvar på nivå ${level()}.` : `${-left} poäng för många för nivå ${level()}.`}</p>
+        <div class="trees">${tree.tabs.map((name, i) => {
+          const tab = i + 1, list = tree.talents.filter((x) => x.tab === tab);
+          const inTab = list.reduce((a, x) => a + (ranks[x.name] || 0), 0);
+          const maxTier = Math.max(...list.map((x) => x.tier));
+          let cells = "";
+          for (let tier = 1; tier <= maxTier; tier++) for (let col = 1; col <= 4; col++) {
+            const t = list.find((x) => x.tier === tier && x.col === col);
+            if (!t) { cells += "<div></div>"; continue; }
+            const r = ranks[t.name] || 0, locked = !!FG.canAdd(tree, ranks, t) && r === 0;
+            cells += `<button type="button" class="tal ${locked ? "locked" : ""} ${r ? (r >= t.max ? "full" : "some") : ""}" data-t="${esc(t.name)}" title="${esc(t.name)}${locked ? " – " + esc(FG.canAdd(tree, ranks, t)) : ""}">${esc(t.name)}<span class="r">${r}/${t.max}</span></button>`;
+          }
+          return `<div class="tree"><h3><span>${esc(name)}</span><span>${inTab}</span></h3><div class="tgrid">${cells}</div></div>`;
+        }).join("")}</div></div>`;
+    }
+    if (tpl) {
+      const res = FG.applyTemplate(tree, tpl, level());
+      html += `<div class="card"><h2>${esc(tpl.name)}: ordning per nivå</h2>
+        ${res.problems.length ? `<p class="small neg">Stämmer inte med trädet: ${res.problems.map(esc).join("; ")}</p>` : tree ? `<p class="small pos">Mallen stämmer med trädet från spelet.</p>` : `<p class="small muted">Läs in trädet från spelet för att kontrollera namn och krav.</p>`}
+        <div class="schedule">${res.schedule.map((p) => `<div><strong>${p.level}</strong> ${esc(p.name)} ${p.rank}</div>`).join("")}</div>
+        <p class="small muted" style="margin-top:10px">${esc(FG.DATA.talentNotes)}</p></div>`;
+    }
+    $("#t-out").innerHTML = html;
+    $$(".tal").forEach((b) => {
+      const t = tree.talents.find((x) => x.name === b.dataset.t);
+      const remove = (e) => { e.preventDefault(); if (FG.canRemove(tree, ranks, t)) { ranks[t.name]--; renderTalents(); } };
+      b.addEventListener("click", (e) => { if (e.shiftKey) return remove(e); if (!FG.canAdd(tree, ranks, t) && spent() < FG.pointsAt(level())) { ranks[t.name] = (ranks[t.name] || 0) + 1; renderTalents(); } });
+      b.addEventListener("contextmenu", remove);
+    });
+  }
+  function loadTree(t, msg) {
+    tree = t; ranks = { ...(t.ranks || {}) };
+    $("#t-class").value = t.class; fillTemplates();
+    store.set("fg-tree-" + t.class, JSON.stringify(t));
+    $("#t-msg").innerHTML = `<span class="pos">${msg}</span>`;
+    renderTalents();
+  }
+  $("#t-load").addEventListener("click", () => {
+    try { const t = FG.parseTalents($("#t-import").value); loadTree(t, `Inläst: ${t.talents.length} talanger.`); }
+    catch (e) { $("#t-msg").innerHTML = `<span class="error">${esc(e.message)}</span>`; }
+  });
+  $("#t-apply").addEventListener("click", () => { if (tree && selectedTemplate()) { ranks = FG.applyTemplate(tree, selectedTemplate(), level()).ranks; renderTalents(); } });
+  $("#t-reset").addEventListener("click", () => { ranks = {}; renderTalents(); });
+  $("#t-class").addEventListener("change", () => {
+    fillTemplates();
+    const t = savedTree($("#t-class").value);
+    tree = t; ranks = t ? { ...(t.ranks || {}) } : {};
+    renderTalents();
+  });
+  ["#t-template", "#t-level"].forEach((id) => $(id).addEventListener("input", renderTalents));
+  fillTemplates();
+  tree = savedTree($("#t-class").value); ranks = tree ? { ...(tree.ranks || {}) } : {};
+  renderTalents();
 
   // ---------------- Updates ----------------
   const D = FG.DATA;

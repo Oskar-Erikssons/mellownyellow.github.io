@@ -286,7 +286,103 @@
     return (copper < 0 ? "-" : "") + parts.join(" ");
   }
 
-  const api = { DATA, CLASSES, RACES, RACE_FIT, RATES, decideSale, vendorFlips, money, scoreClasses, scoreRaces, parseExport, runSim, compareRaces, spellResult, meleeDPS, rangedDPS };
+  // ---------- Leveling route ----------
+
+  const factionOf = (race) => (RACES[race] || {}).faction;
+  const fits = (z, faction) => z.faction === "Both" || z.faction === faction;
+
+  // Steps of about five levels: where to quest, which dungeons fit and what to do at the trainer.
+  function planRoute(race, classId, from = 1, to = 60) {
+    const faction = factionOf(race);
+    if (!faction) return [];
+    const start = DATA.startZones[race];
+    let continent = (DATA.zones.find((z) => z.name === start) || {}).continent;
+    const steps = [];
+    for (let lo = from, hi; lo <= to; lo = hi + 1) {
+      hi = Math.min(to, lo < 10 ? 9 : lo + 4);
+      const mid = (lo + hi) / 2;
+      let zones = lo < 10 && start
+        ? DATA.zones.filter((z) => z.name === start)
+        : DATA.zones.filter((z) => fits(z, faction) && z.min <= mid && z.max >= mid && z.max > z.min && z.min > 1);
+      // Stay on the same continent when possible: less travel time.
+      zones.sort((a, b) => (b.continent === continent) - (a.continent === continent) || Math.abs((a.min + a.max) / 2 - mid) - Math.abs((b.min + b.max) / 2 - mid));
+      zones = zones.slice(0, 3);
+      if (zones[0]) continent = zones[0].continent;
+      const dungeons = DATA.dungeons.filter((d) => fits(d, faction) && d.min <= hi && d.max >= lo + 2);
+      const milestones = DATA.milestones.filter((m) => m.level >= lo && m.level <= hi && (m.class === "ALL" || m.class === classId));
+      steps.push({ from: lo, to: hi, zones, dungeons, milestones });
+    }
+    return steps;
+  }
+
+  // ---------- Talent planner ----------
+  // A tree comes from the addon (/fg talents export) as "FGT1&class=MAGE&tabs=A|B|C&t=tab:tier:col:max:preTier:preCol:Name;..."
+
+  function parseTalents(text) {
+    text = (text || "").trim();
+    if (!text.startsWith("FGT1")) throw new Error("Texten ska börja med FGT1. Skapa den med /fg talents export i spelet.");
+    const out = { class: "", tabs: [], talents: [], ranks: {} };
+    for (const part of text.split("&").slice(1)) {
+      const i = part.indexOf("="), k = part.slice(0, i), v = part.slice(i + 1);
+      if (k === "class") out.class = v.toUpperCase();
+      if (k === "tabs") out.tabs = v.split("|");
+      if (k === "t") {
+        for (const row of v.split(";").filter(Boolean)) {
+          const [tab, tier, col, max, preTier, preCol, rank, ...name] = row.split(":");
+          out.talents.push({ tab: +tab, tier: +tier, col: +col, max: +max, preTier: +preTier || 0, preCol: +preCol || 0, name: name.join(":") });
+          if (+rank) out.ranks[name.join(":")] = +rank;
+        }
+      }
+    }
+    return out;
+  }
+
+  const pointsAt = (level) => Math.max(0, Math.min(level, 60) - 9);
+
+  // Can one more point go into this talent, given the points already spent?
+  function canAdd(tree, ranks, t) {
+    if ((ranks[t.name] || 0) >= t.max) return "Max rank";
+    const inTab = tree.talents.filter((x) => x.tab === t.tab).reduce((a, x) => a + (ranks[x.name] || 0), 0);
+    if (inTab < (t.tier - 1) * 5) return `Kräver ${(t.tier - 1) * 5} poäng i ${tree.tabs[t.tab - 1] || "trädet"}`;
+    if (t.preTier) {
+      const pre = tree.talents.find((x) => x.tab === t.tab && x.tier === t.preTier && x.col === t.preCol);
+      if (pre && (ranks[pre.name] || 0) < pre.max) return `Kräver ${pre.name} fullt`;
+    }
+    return null;
+  }
+
+  function canRemove(tree, ranks, t) {
+    if (!(ranks[t.name] > 0)) return false;
+    const next = { ...ranks, [t.name]: ranks[t.name] - 1 };
+    // Removing must not break a higher tier or a talent that needs this one.
+    return tree.talents.every((x) => {
+      if (!(next[x.name] > 0)) return true;
+      if (x.preTier && x.tab === t.tab && x.preTier === t.tier && x.preCol === t.col && next[t.name] < t.max) return false;
+      const below = tree.talents.filter((y) => y.tab === x.tab && y.tier < x.tier).reduce((a, y) => a + (next[y.name] || 0), 0);
+      return below >= (x.tier - 1) * 5;
+    });
+  }
+
+  // Applies a template point by point. Returns the level for each point and any problems.
+  function applyTemplate(tree, template, level = 60) {
+    const ranks = {}, schedule = [], problems = [];
+    let point = 0;
+    for (const [name, n] of template.picks) {
+      const t = tree ? tree.talents.find((x) => x.name.toLowerCase() === name.toLowerCase()) : null;
+      if (tree && !t) { problems.push(`${name} finns inte i trädet`); continue; }
+      for (let i = 0; i < n && point < pointsAt(level); i++) {
+        const why = t ? canAdd(tree, ranks, t) : null;
+        if (why) { problems.push(`${name}: ${why}`); break; }
+        const key = t ? t.name : name;
+        ranks[key] = (ranks[key] || 0) + 1;
+        point++;
+        schedule.push({ level: point + 9, name: key, rank: ranks[key] });
+      }
+    }
+    return { ranks, schedule, problems };
+  }
+
+  const api = { planRoute, parseTalents, canAdd, canRemove, applyTemplate, pointsAt, DATA, CLASSES, RACES, RACE_FIT, RATES, decideSale, vendorFlips, money, scoreClasses, scoreRaces, parseExport, runSim, compareRaces, spellResult, meleeDPS, rangedDPS };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.ForeverGuide = api;
 })(typeof window !== "undefined" ? window : globalThis);
