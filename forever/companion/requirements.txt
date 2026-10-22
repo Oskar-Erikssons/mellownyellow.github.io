@@ -1,0 +1,10 @@
+# Always needed
+numpy
+soundfile
+
+# Choose one voice engine:
+# kokoro          # Kokoro-82M, Apache-2.0, fast on CPU
+# chatterbox-tts  # Chatterbox, MIT, voice cloning, wants a GPU
+
+# Only for blizzard_fetch.py
+requests

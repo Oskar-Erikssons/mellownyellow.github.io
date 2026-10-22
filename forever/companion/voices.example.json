@@ -1,0 +1,30 @@
+{
+  "kokoro": {
+    "narrator": "bm_fable",
+    "male": ["am_michael", "bm_george", "am_fenrir", "bm_lewis"],
+    "female": ["af_heart", "bf_emma", "af_bella", "bf_isabella"],
+    "npc": {
+      "Marshal Dughan": "bm_george",
+      "Thrall": "am_onyx"
+    }
+  },
+  "chatterbox": {
+    "narrator": "voices/narrator.wav",
+    "male": ["voices/dwarf_male.wav", "voices/human_male.wav"],
+    "female": ["voices/elf_female.wav"],
+    "npc": {}
+  },
+  "http": {
+    "narrator": "default",
+    "male": ["default"],
+    "female": ["default"],
+    "npc": {},
+    "prefix": {
+      "detail": "[a weathered quest giver, serious and urgent]",
+      "progress": "[impatient, curious]",
+      "complete": "[relieved and grateful]",
+      "gossip": "[warm, friendly]",
+      "book": "[calm narrator reading an old book]"
+    }
+  }
+}

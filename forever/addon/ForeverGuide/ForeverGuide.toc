@@ -1,0 +1,12 @@
+## Interface: 16001
+## Title: Forever Guide
+## Notes: Quest narrator (built-in TTS + open-source AI voices) and a stat/spell simulator for WoW: Forever.
+## Author: Oskar Eriksson
+## Version: 0.1.0
+## SavedVariables: ForeverGuideDB
+## OptionalDeps: ForeverGuide_Voices
+
+Core.lua
+Narrator.lua
+Sim.lua
+UI.lua

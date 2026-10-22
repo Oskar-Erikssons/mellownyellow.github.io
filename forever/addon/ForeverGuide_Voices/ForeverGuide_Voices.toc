@@ -1,0 +1,7 @@
+## Interface: 16001
+## Title: Forever Guide - Voices
+## Notes: Pre-generated voice files for Forever Guide. Filled by companion/forever_voice.py.
+## Author: Oskar Eriksson
+## Version: 0.1.0
+
+Manifest.lua

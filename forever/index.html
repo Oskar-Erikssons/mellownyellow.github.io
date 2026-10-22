@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forever Guide</title>
+<meta name="description" content="Välj klass och ras, simulera din karaktär och få quest-texter upplästa i WoW: Forever.">
+<style>
+  :root {
+    --bg: #14110d; --panel: #1f1a14; --panel-2: #2a231a; --line: #4a3c28;
+    --text: #efe6d4; --muted: #b5a68b; --gold: #e8b64c; --gold-2: #ffd27a;
+    --good: #7fd18b; --bad: #e98272; --alliance: #6fa8ff; --horde: #ff7a6b;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { padding: 32px 16px 8px; text-align: center; background: radial-gradient(ellipse at top, #3a2c16 0%, var(--bg) 70%); }
+  h1 { font-family: Georgia, "Times New Roman", serif; color: var(--gold-2); font-size: clamp(28px, 6vw, 44px); margin: 0 0 6px; letter-spacing: .5px; }
+  h2 { font-family: Georgia, serif; color: var(--gold); margin: 0 0 12px; font-size: 24px; }
+  h3 { color: var(--gold-2); margin: 18px 0 8px; font-size: 18px; }
+  header p { color: var(--muted); max-width: 640px; margin: 0 auto; }
+  nav { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; padding: 16px; position: sticky; top: 0; background: rgba(20,17,13,.95); border-bottom: 1px solid var(--line); z-index: 2; }
+  nav button { background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 999px; padding: 8px 16px; font: inherit; cursor: pointer; }
+  nav button[aria-selected="true"] { background: var(--gold); color: #241a08; border-color: var(--gold); font-weight: 600; }
+  main { max-width: 980px; margin: 0 auto; padding: 24px 16px 64px; }
+  section[hidden] { display: none; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
+  .muted { color: var(--muted); }
+  .small { font-size: 14px; }
+  .q { margin-bottom: 16px; }
+  .q > div:first-child { font-weight: 600; margin-bottom: 6px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chips label { cursor: pointer; }
+  .chips input { position: absolute; opacity: 0; pointer-events: none; }
+  .chips span { display: inline-block; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel-2); }
+  .chips input:checked + span { background: var(--gold); color: #241a08; border-color: var(--gold); }
+  .chips input:focus-visible + span { outline: 2px solid var(--gold-2); outline-offset: 2px; }
+  .result { border-left: 4px solid var(--gold); padding: 12px 16px; margin: 10px 0; background: var(--panel-2); border-radius: 0 var(--radius) var(--radius) 0; }
+  .result.top { border-left-color: var(--gold-2); }
+  .tag { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); margin-left: 6px; color: var(--muted); }
+  .Alliance { color: var(--alliance); } .Horde { color: var(--horde); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+  .grid label { display: flex; flex-direction: column; font-size: 13px; color: var(--muted); }
+  input[type=number], input[type=text], select, textarea { background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 7px 9px; font: inherit; width: 100%; }
+  textarea { min-height: 80px; font-family: ui-monospace, Consolas, monospace; font-size: 13px; }
+  button.main { background: var(--gold); color: #241a08; border: 0; border-radius: 6px; padding: 9px 18px; font: inherit; font-weight: 600; cursor: pointer; }
+  button.ghost { background: transparent; color: var(--gold-2); border: 1px solid var(--line); border-radius: 6px; padding: 8px 14px; font: inherit; cursor: pointer; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--gold); font-weight: 600; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .pos { color: var(--good); } .neg { color: var(--bad); }
+  .error { color: var(--bad); }
+  code, pre { font-family: ui-monospace, Consolas, monospace; font-size: 13px; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; }
+  code { padding: 1px 5px; }
+  pre { padding: 12px; overflow-x: auto; }
+  ol, ul { padding-left: 22px; }
+  li { margin: 4px 0; }
+  a { color: var(--gold-2); }
+  .flow { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+  .flow div { background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; font-size: 14px; }
+  .flow b { color: var(--gold-2); display: block; margin-bottom: 4px; }
+  details summary { cursor: pointer; color: var(--gold-2); font-size: 13px; margin-top: 4px; }
+  details ul { margin: 4px 0 0; }
+  @media (max-width: 600px) {
+    nav { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; padding: 10px 16px; }
+    nav button { flex: 0 0 auto; }
+  }
+  footer { text-align: center; color: var(--muted); font-size: 13px; padding: 24px 16px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Forever Guide</h1>
+  <p>Välj klass och ras, simulera din karaktär och låt quest-texterna läsas upp när du utforskar Azeroth i <strong>World of Warcraft: Forever</strong>.</p>
+</header>
+
+<nav role="tablist">
+  <button role="tab" data-tab="advisor" aria-selected="true">Välj klass & ras</button>
+  <button role="tab" data-tab="sim">Simulator</button>
+  <button role="tab" data-tab="voice">Uppläsning</button>
+  <button role="tab" data-tab="install">Installera</button>
+  <button role="tab" data-tab="ideas">Fler idéer</button>
+</nav>
+
+<main>
+<!-- ============ Advisor ============ -->
+<section id="advisor">
+  <div class="card">
+    <h2>Vilken klass och ras passar dig?</h2>
+    <p class="muted small">Svara på frågorna. Förslagen bygger på klassernas styrkor och rasernas egenskaper (racials) som de var 2004.</p>
+    <form id="advisor-form">
+      <div class="q"><div>Vilken roll vill du ha i en grupp?</div><div class="chips" data-name="role"></div></div>
+      <div class="q"><div>Hur vill du slåss?</div><div class="chips" data-name="style"></div></div>
+      <div class="q"><div>Hur viktigt är det att kunna levla ensam?</div><div class="chips" data-name="solo"></div></div>
+      <div class="q"><div>Vad lockar mest?</div><div class="chips" data-name="focus"></div></div>
+      <div class="q"><div>Hur avancerat får det vara?</div><div class="chips" data-name="ease"></div></div>
+      <div class="q"><div>Fraktion</div><div class="chips" data-name="faction"></div></div>
+      <div class="q"><div>Ska du spela Hardcore (en enda chans)?</div><div class="chips" data-name="hardcore"></div></div>
+    </form>
+  </div>
+  <div id="advisor-result"></div>
+</section>
+
+<!-- ============ Simulator ============ -->
+<section id="sim" hidden>
+  <div class="card">
+    <h2>Simulera din karaktär</h2>
+    <p class="muted small">Skriv <code>/fg export</code> i spelet, kopiera texten och klistra in den här. Du kan också fylla i värdena själv.</p>
+    <textarea id="import" placeholder="FG1&class=MAGE&race=Gnome&lvl=20&..."></textarea>
+    <div class="row">
+      <button class="main" id="do-import" type="button">Läs in</button>
+      <button class="ghost" type="button" data-demo="mage">Exempel: gnommagiker nivå 20</button>
+      <button class="ghost" type="button" data-demo="warrior">Exempel: människokrigare nivå 60</button>
+      <span id="import-msg" class="small"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Din karaktär</h3>
+    <div class="grid" id="stats"></div>
+    <div class="grid" style="margin-top:10px">
+      <label>Fiendens nivå<select id="targetDiff">
+        <option value="0">Samma som du</option><option value="1">+1</option><option value="2">+2</option><option value="3">+3 (boss)</option>
+      </select></label>
+      <label>Närstridsvapen<select id="weapon">
+        <option value="other">Annat</option><option value="sword">Svärd</option><option value="mace">Klubba</option><option value="axe">Yxa</option><option value="dagger">Dolk</option>
+      </select></label>
+      <label>Avståndsvapen<select id="rangedWeapon">
+        <option value="other">Annat</option><option value="bow">Pilbåge</option><option value="gun">Gevär</option><option value="thrown">Kastvapen</option>
+      </select></label>
+      <label>Tooltips innehåller spell power<select id="tooltipSP"><option value="0">Nej (som 2004)</option><option value="1">Ja</option></select></label>
+    </div>
+    <div class="row"><button class="main" id="run" type="button">Simulera</button></div>
+  </div>
+  <div id="sim-result"></div>
+</section>
+
+<!-- ============ Voice ============ -->
+<section id="voice" hidden>
+  <div class="card">
+    <h2>Quest-texter som läses upp</h2>
+    <p>Addonen läser upp quest-texter, NPC-dialog och böcker. Den har två röster:</p>
+    <ol>
+      <li><strong>Direkt röst:</strong> spelets inbyggda talsyntes. Den fungerar direkt utan installation, men låter som datorns standardröst.</li>
+      <li><strong>AI-röst med öppen källkod:</strong> klipp som du skapar på din egen dator med en modell i nivå med ElevenLabs. Varje NPC får en egen, fast röst.</li>
+    </ol>
+    <p>Addonen spelar AI-klippet om det finns. Annars använder den spelets röst och lägger texten i kö till nästa gång.</p>
+    <div class="flow">
+      <div><b>1. Spela</b>Addonen läser upp med spelets röst och sparar nya texter när du loggar ut.</div>
+      <div><b>2. Skapa röster</b>Kör <code>forever_voice.py</code>. Den gör .ogg-klipp av texterna i kön.</div>
+      <div><b>3. Starta om spelet</b>Klippen spelas nu automatiskt nästa gång du möter samma text.</div>
+    </div>
+    <p class="muted small">Addons får inte prata med andra program medan spelet körs. Därför skapas rösterna mellan spelsessionerna. Verktyget läser bara addonens sparfil och skriver ljudfiler. Det rör aldrig själva spelet.</p>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Vilken röstmodell ska du välja?</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Modell</th><th>Licens</th><th>Styrka</th><th>Dator</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Kokoro-82M</strong><br><span class="muted small">--engine kokoro</span></td><td>Apache-2.0</td><td>Bra och naturlig röst. Mycket snabb. Bäst att börja med.</td><td>Vanlig dator, CPU räcker</td></tr>
+        <tr><td><strong>Chatterbox</strong> (Resemble AI)<br><span class="muted small">--engine chatterbox</span></td><td>MIT</td><td>Klonar en röst från ett kort ljudklipp. Har reglage för känsla. Passar karaktärsröster.</td><td>Grafikkort rekommenderas</td></tr>
+        <tr><td><strong>Fish Audio Drama 3</strong><br><span class="muted small">--engine http</span></td><td>Fish Audio Community License: gratis privat, avgift för större företag</td><td>Mest uttrycksfull. Du regisserar med <code>[viskar skräckslaget]</code> före texten.</td><td>Mycket stor modell (35B), cirka 32–48 GB grafikminne. Hyr en GPU för en körning.</td></tr>
+        <tr><td><strong>Fish Audio S2 Pro</strong><br><span class="muted small">--engine http</span></td><td>Endast forskning och icke-kommersiellt</td><td>Mycket uttrycksfull, föregångare till Drama 3.</td><td>Grafikkort</td></tr>
+        <tr><td><strong>Piper</strong></td><td>MIT / GPL</td><td>Enkel röst, men snabb och har svenska röster.</td><td>Fungerar även på en Raspberry Pi</td></tr>
+        <tr><td><strong>XTTS-v2</strong> (Coqui)</td><td>Icke-kommersiell</td><td>Bra kloning, men utvecklingen har stannat.</td><td>Grafikkort</td></tr>
+      </tbody>
+    </table></div>
+    <p class="small muted">Rekommendation: börja med Kokoro, som fungerar på alla datorer. Byt till Chatterbox när du vill ha egna röster till dvärgar, orcher och alver. Drama 3 passar när du vill göra en stor körning av en hel zon på en hyrd server.</p>
+  </div>
+</section>
+
+<!-- ============ Install ============ -->
+<section id="install" hidden>
+  <div class="card">
+    <h2>Installera</h2>
+    <h3>Addonen</h3>
+    <ol>
+      <li>Hämta mappen <a href="https://github.com/Oskar-Erikssons/mellownyellow.github.io/tree/main/forever/addon">forever/addon</a> från GitHub.</li>
+      <li>Kopiera <code>ForeverGuide</code> och <code>ForeverGuide_Voices</code> till spelets <code>Interface/AddOns</code>. I betan heter spelmappen <code>_classic_beta_</code> eller liknande.</li>
+      <li>Starta spelet och skriv <code>/fg</code> för att se alla kommandon.</li>
+    </ol>
+    <h3>Röstverktyget</h3>
+<pre>cd forever/companion
+pip install numpy soundfile kokoro
+python forever_voice.py --wow "C:/Program Files (x86)/World of Warcraft/_forever_" --dry-run
+python forever_voice.py --wow "C:/Program Files (x86)/World of Warcraft/_forever_"</pre>
+    <h3>Battle.net API (frivilligt)</h3>
+    <p>Med <code>blizzard_fetch.py</code> hämtar du klasser, raser och din karaktärs statistik. Skriptet skriver ut samma exporttext som addonen.</p>
+<pre>set BLIZZARD_CLIENT_ID=...
+set BLIZZARD_CLIENT_SECRET=...
+python blizzard_fetch.py character --realm din-realm --name Oskar</pre>
+    <p class="small muted">Lägg aldrig din client secret på den här webbsidan. Allt på GitHub Pages är offentligt. Blizzard har ännu inte sagt vilken namespace WoW: Forever får i API:et, så verktyget använder Classic Era tills vidare.</p>
+  </div>
+</section>
+
+<!-- ============ Ideas ============ -->
+<section id="ideas" hidden>
+  <div class="card">
+    <h2>Fler funktioner att bygga</h2>
+    <h3>Upplevelse och berättelse</h3>
+    <ul>
+      <li><strong>Svensk översättning:</strong> översätt quest-texterna lokalt och läs upp dem med en svensk röst.</li>
+      <li><strong>Röster per folk:</strong> referensklipp för dvärgar, orcher och alver, så att röst och accent passar NPC:n.</li>
+      <li><strong>Äventyrsdagbok:</strong> spara alla quests du läst och visa dem som en berättelse här på webben.</li>
+      <li><strong>Zonpaket:</strong> skapa alla röster för en zon i förväg och dela paketet med vänner.</li>
+    </ul>
+    <h3>Hjälp att komma vidare</h3>
+    <ul>
+      <li><strong>Uppgraderingsråd:</strong> visa i tooltipen hur mycket ett föremål höjer din skada, baserat på simulatorns statvikter.</li>
+      <li><strong>Hardcore-varning:</strong> röstvarning vid låg hälsa, elitfiender och fiender långt över din nivå.</li>
+      <li><strong>Levlingsrutt:</strong> föreslår nästa quest och zon utifrån nivå, klass och fraktion.</li>
+      <li><strong>Talang- och yrkesplanerare:</strong> kopplad till klassvalet i början.</li>
+    </ul>
+    <h3>Tillgänglighet</h3>
+    <ul>
+      <li>Större text och dyslexivänligt typsnitt i quest-fönstret.</li>
+      <li>Justerbar talhastighet per NPC-typ.</li>
+    </ul>
+  </div>
+</section>
+</main>
+<footer>Forever Guide är ett fanprojekt och har ingen koppling till Blizzard Entertainment. Siffrorna är uppskattningar.</footer>
+
+<script src="app.js"></script>
+<script>
+(function () {
+  "use strict";
+  const FG = window.ForeverGuide;
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const fmt = (n, d = 1) => (n == null || isNaN(n) ? "–" : Number(n).toLocaleString("sv-SE", { minimumFractionDigits: d, maximumFractionDigits: d }));
+
+  // ---- Tabs ----
+  document.querySelectorAll("nav button").forEach((b) => b.addEventListener("click", () => {
+    document.querySelectorAll("nav button").forEach((x) => x.setAttribute("aria-selected", x === b));
+    document.querySelectorAll("main > section").forEach((s) => { s.hidden = s.id !== b.dataset.tab; });
+  }));
+
+  // ---- Advisor ----
+  const QUESTIONS = {
+    role: [["any", "Spelar ingen roll"], ["dps", "Göra skada"], ["tank", "Tanka"], ["heal", "Hela"]],
+    style: [["any", "Spelar ingen roll"], ["melee", "Närstrid"], ["ranged", "Pilbåge och gevär"], ["caster", "Magi"], ["pet", "Med husdjur"]],
+    solo: [["any", "Mittemellan"], ["high", "Mycket viktigt"], ["group", "Jag spelar mest i grupp"]],
+    focus: [["any", "Lite av allt"], ["pve", "Dungeons och raider"], ["pvp", "PvP"], ["explore", "Quests och utforskande"]],
+    ease: [["any", "Mellan"], ["easy", "Enkel"], ["hard", "Avancerad"]],
+    faction: [["any", "Båda"], ["Alliance", "Alliance"], ["Horde", "Horde"]],
+    hardcore: [["no", "Nej"], ["yes", "Ja"]],
+  };
+  for (const [name, opts] of Object.entries(QUESTIONS)) {
+    const box = document.querySelector(`.chips[data-name="${name}"]`);
+    box.innerHTML = opts.map(([v, label], i) =>
+      `<label><input type="radio" name="${name}" value="${v}" ${i === 0 ? "checked" : ""}><span>${esc(label)}</span></label>`).join("");
+  }
+
+  function renderAdvisor() {
+    const a = Object.fromEntries(new FormData($("#advisor-form")));
+    const classes = FG.scoreClasses(a).slice(0, 3);
+    $("#advisor-result").innerHTML = classes.map((c, i) => {
+      const races = FG.scoreRaces(c.id, a).slice(0, 3);
+      return `<div class="card">
+        <h2>${i + 1}. ${esc(c.name)}${c.faction ? `<span class="tag ${c.faction}">bara ${c.faction}</span>` : ""}</h2>
+        <p>${esc(c.about)}</p>
+        ${c.why.length ? `<p class="muted small">Därför passar den dig: ${esc(c.why.join(", "))}.</p>` : ""}
+        <h3>Bästa raserna för ${esc(c.name.toLowerCase())}</h3>
+        ${races.map((r, j) => `<div class="result ${j === 0 ? "top" : ""}">
+          <strong>${esc(r.name)}</strong> <span class="tag ${r.faction}">${r.faction}</span>
+          <span class="tag">PvE ${r.pve}/5</span><span class="tag">PvP ${r.pvp}/5</span>
+          <ul class="small">${r.racials.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>
+        </div>`).join("")}
+      </div>`;
+    }).join("");
+  }
+  $("#advisor-form").addEventListener("change", renderAdvisor);
+  renderAdvisor();
+
+  // ---- Simulator ----
+  const FIELDS = [
+    ["class", "Klass", "select", Object.entries(FG.CLASSES).map(([k, c]) => [k, c.name])],
+    ["race", "Ras", "select", Object.entries(FG.RACES).map(([k, r]) => [k, r.name])],
+    ["level", "Nivå"], ["str", "Strength"], ["agi", "Agility"], ["sta", "Stamina"], ["int", "Intellect"], ["spi", "Spirit"],
+    ["mana", "Mana"], ["ap", "Attack power"], ["crit", "Crit närstrid %"], ["spellCrit", "Crit magi %"],
+    ["sp", "Spell power"], ["healing", "Bonus helning"], ["hit", "Hit %"], ["spellHit", "Spell hit %"],
+    ["mhMin", "Vapen min"], ["mhMax", "Vapen max"], ["mhSpeed", "Vapen hastighet"],
+    ["rMin", "Avstånd min"], ["rMax", "Avstånd max"], ["rSpeed", "Avstånd hastighet"],
+  ];
+  $("#stats").innerHTML = FIELDS.map(([k, label, type, opts]) => type === "select"
+    ? `<label>${label}<select id="f-${k}">${opts.map(([v, t]) => `<option value="${v}">${esc(t)}</option>`).join("")}</select></label>`
+    : `<label>${label}<input type="number" step="any" id="f-${k}"></label>`).join("");
+
+  let spells = [];
+
+  function fillForm(s) {
+    const set = (k, v) => { const el = $("#f-" + k); if (el) el.value = v ?? ""; };
+    for (const [k] of FIELDS) set(k, s[k]);
+    set("mhMin", s.mh?.min); set("mhMax", s.mh?.max); set("mhSpeed", s.mh?.speed);
+    set("rMin", s.ranged?.min); set("rMax", s.ranged?.max); set("rSpeed", s.ranged?.speed);
+    spells = s.spells || [];
+    offhand = s.oh || null;
+    rangedCrit = s.rangedCrit ?? null;
+  }
+  let offhand = null, rangedCrit = null;
+
+  function readForm() {
+    const v = (k) => { const x = parseFloat($("#f-" + k).value); return isNaN(x) ? undefined : x; };
+    const s = { class: $("#f-class").value, race: $("#f-race").value, spells, oh: offhand };
+    for (const [k, , type] of FIELDS) if (type !== "select" && !/^(mh|r)[A-Z]/.test(k)) s[k] = v(k);
+    if (v("mhMin") != null && v("mhSpeed")) s.mh = { min: v("mhMin"), max: v("mhMax") ?? v("mhMin"), speed: v("mhSpeed") };
+    if (v("rMin") != null && v("rSpeed")) s.ranged = { min: v("rMin"), max: v("rMax") ?? v("rMin"), speed: v("rSpeed") };
+    if (rangedCrit != null) s.rangedCrit = rangedCrit;
+    return s;
+  }
+
+  const DEMOS = {
+    mage: "FG1&class=MAGE&race=Gnome&lvl=20&str=20&agi=25&sta=40&int=90&spi=70&hp=600&mana=1200&crit=3.00&scrit=5.00&sp=20&heal=0&hit=0&shit=0&mh=10.0-20.0@2.50&spells=Fireball:d:100:130:8:8:3:0:110;Fire Blast:d:60:75:0:0:0:8:75;Frostbolt:d:78:87:0:0:2.5:0:80;Arcane Missiles:d:0:0:130:5:5:0:120",
+    warrior: "FG1&class=WARRIOR&race=Human&lvl=60&str=300&agi=150&sta=250&int=30&spi=50&ap=900&crit=20&hit=5&mh=150.0-250.0@3.60",
+  };
+
+  function doImport(text) {
+    try {
+      const s = FG.parseExport(text);
+      fillForm(s);
+      $("#import-msg").innerHTML = `<span class="pos">Inläst: ${esc(FG.CLASSES[s.class]?.name || s.class)}, nivå ${esc(s.level)}, ${spells.length} formler.</span>`;
+      runSim();
+    } catch (e) {
+      $("#import-msg").innerHTML = `<span class="error">${esc(e.message)}</span>`;
+    }
+  }
+  $("#do-import").addEventListener("click", () => doImport($("#import").value));
+  document.querySelectorAll("[data-demo]").forEach((b) => b.addEventListener("click", () => {
+    $("#import").value = DEMOS[b.dataset.demo];
+    doImport(DEMOS[b.dataset.demo]);
+  }));
+  $("#run").addEventListener("click", runSim);
+
+  function runSim() {
+    const s = readForm();
+    const opt = {
+      targetDiff: +$("#targetDiff").value, weapon: $("#weapon").value, rangedWeapon: $("#rangedWeapon").value,
+      tooltipIncludesSP: $("#tooltipSP").value === "1",
+    };
+    if (!FG.RACES[s.race].classes.includes(s.class)) {
+      $("#sim-result").innerHTML = `<div class="card error">${esc(FG.RACES[s.race].name)} kan inte vara ${esc(FG.CLASSES[s.class].name.toLowerCase())}.</div>`;
+      return;
+    }
+    const r = FG.runSim(s, opt);
+    const cmp = FG.compareRaces(s, opt);
+    const w = r.weights;
+    const SOURCE = { melee: "närstrid", ranged: "avståndsattacker", spell: "bästa formel" };
+
+    let html = `<div class="card"><h2>Resultat</h2><div class="table-wrap"><table>
+      <tr><td>Närstrid (vita slag)</td><td class="num">${fmt(r.melee)} DPS</td></tr>
+      <tr><td>Avståndsvapen</td><td class="num">${fmt(r.ranged)} DPS</td></tr>
+      ${r.topSpell ? `<tr><td>Bästa skadeformel: ${esc(r.topSpell.spell.name)}</td><td class="num">${fmt(r.topSpell.dps)} DPS</td></tr>` : ""}
+    </table></div>`;
+
+    if (r.results.length) {
+      html += `<h3>Dina formler</h3><div class="table-wrap"><table>
+        <thead><tr><th>Formel</th><th class="num">Per kast</th><th class="num">Per sekund</th><th class="num">Per mana</th><th class="num">Kast på full mana</th></tr></thead><tbody>
+        ${r.results.map((x) => `<tr><td>${esc(x.spell.name)}${x.spell.kind === "heal" ? '<span class="tag">helning</span>' : ""}</td>
+          <td class="num">${fmt(x.perCast, 0)}</td><td class="num">${fmt(x.dps)}</td><td class="num">${fmt(x.dpm, 2)}</td><td class="num">${x.castsToOOM ?? "–"}</td></tr>`).join("")}
+        </tbody></table></div>`;
+    } else {
+      html += `<p class="muted small">Inga formler inlästa. Importera från spelet för att se dem.</p>`;
+    }
+
+    const wl = [];
+    if (w.sp10 != null) wl.push(["+10 spell power", w.sp10, "på bästa formeln"]);
+    if (w.crit1 != null) wl.push(["+1 % crit med magi", w.crit1, "på bästa formeln"]);
+    if (w.ap14 != null) wl.push(["+14 attack power", w.ap14, "i närstrid"]);
+    if (w.meleeCrit1 != null) wl.push(["+1 % crit i närstrid", w.meleeCrit1, "i närstrid"]);
+    if (w.hit1 != null) wl.push(["+1 % hit", w.hit1, w.hit1 === 0 ? "du har redan nått taket mot den här fienden" : "i närstrid"]);
+    if (wl.length) {
+      wl.sort((a, b) => b[1] - a[1]);
+      html += `<h3>Det här höjer din skada mest</h3><div class="table-wrap"><table>
+        ${wl.map(([l, v, note]) => `<tr><td>${l}</td><td class="num pos">+${fmt(v, 2)} DPS</td><td class="muted small">${note}</td></tr>`).join("")}</table></div>`;
+    }
+    html += `</div>`;
+
+    if (cmp) {
+      html += `<div class="card"><h2>Samma utrustning, annan ras</h2>
+        <p class="muted small">Jämför ${SOURCE[cmp.source]}. Räknar med rasens grundstats, vapenskicklighet och snittet av Berserking och Blood Fury över en lång strid.</p>
+        <div class="table-wrap"><table><thead><tr><th>Ras</th><th class="num">DPS</th><th class="num">Skillnad</th></tr></thead><tbody>
+        ${cmp.rows.map((x) => `<tr><td><strong>${esc(x.name)}</strong>${x.current ? '<span class="tag">din ras</span>' : ""}
+            <span class="small ${x.faction}">${x.faction}</span>
+            <details><summary>Racials</summary><ul class="small">${x.racials.map((y) => `<li>${esc(y)}</li>`).join("")}</ul></details></td>
+          <td class="num">${fmt(x.value)}</td>
+          <td class="num ${x.change > 0.05 ? "pos" : x.change < -0.05 ? "neg" : ""}">${x.current ? "–" : (x.change > 0 ? "+" : "") + fmt(x.change, 1) + " %"}</td></tr>`).join("")}
+        </tbody></table></div>
+        <p class="muted small">Skillnaderna i skada är oftast små. Racials som Will of the Forsaken, Stoneform och War Stomp avgör mer i PvP, men de syns inte i DPS.</p></div>`;
+    }
+    html += `<p class="muted small">Uppskattning med reglerna från 2004 och omvandlingstal för nivå 60. Det är ingen fullständig stridssimulering.</p>`;
+    $("#sim-result").innerHTML = html;
+  }
+})();
+</script>
+</body>
+</html>
