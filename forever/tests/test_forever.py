@@ -179,7 +179,7 @@ class AddonLuaTests(unittest.TestCase):
         self.lua = lupa.LuaRuntime(unpack_returned_tuples=True)
         self.lua.execute(WOW_STUBS)
         self.fg = self.lua.eval("{}")
-        for name in ("Core.lua", "GameData.lua", "Theme.lua", "Narrator.lua", "Sim.lua", "Auction.lua", "Inventory.lua", "Gear.lua", "Professions.lua", "Route.lua", "Atlas.lua", "UI.lua"):
+        for name in ("Core.lua", "GameData.lua", "Theme.lua", "Narrator.lua", "Sim.lua", "Auction.lua", "Inventory.lua", "Gear.lua", "Professions.lua", "Route.lua", "Atlas.lua", "QoL.lua", "UI.lua", "Bags.lua", "Market.lua"):
             chunk = self.lua.execute("return function(src, name) return assert((loadstring or load)(src, name)) end")(
                 (ADDON / name).read_text(encoding="utf-8"), name)
             chunk("ForeverGuide", self.fg)
@@ -438,6 +438,78 @@ class AtlasLuaTests(NewModulesLuaTests):
     def test_route_includes_level_60_zones(self):
         zones, _ = self.fg.Route.ForLevel(60, "Alliance", "Human", "KAL")
         self.assertIn("Mount Hyjal", [zones[i + 1].name for i in range(len(zones))])
+
+
+class BagsMarketLuaTests(NewModulesLuaTests):
+    def test_bag_search(self):
+        m = self.fg.Bags.Matches
+        linen = self.t({"name": "Linen Cloth", "quality": 1, "action": "ah"})
+        junk = self.t({"name": "Broken Fang", "quality": 0, "action": "vendor", "vendor": 5})
+        ring = self.t({"name": "Band of Thorns", "quality": 2, "action": "vendor", "upgrade": 1.2, "bound": True})
+        self.assertTrue(m("", linen))
+        self.assertTrue(m("linen", linen))
+        self.assertTrue(m("ah", linen))
+        self.assertFalse(m("ah", junk))
+        self.assertTrue(m("junk", junk))
+        self.assertTrue(m("skräp", junk))
+        self.assertTrue(m("upgrade bound", ring))
+        self.assertFalse(m("upgrade thorns ah", ring))
+        self.assertTrue(m("THORNS", ring))
+
+    def test_other_bag_addons_win(self):
+        other = self.fg.Bags.OtherBagAddon
+        self.assertEqual(other(self.lua.eval("function(n) return n == 'Bagnon' end")), "Bagnon")
+        self.assertIsNone(other(self.lua.eval("function() return false end")))
+
+    def test_bag_layout_and_badges(self):
+        rows, w, h = self.fg.Bags.Layout(16 + 4 * 14, 10)
+        self.assertEqual(rows, 8)
+        self.assertGreater(w, 10 * 37)
+        self.assertEqual(self.fg.Bags.Badge(self.t({"quality": 0, "vendor": 5}))[0], "junk")
+        self.assertEqual(self.fg.Bags.Badge(self.t({"quality": 1, "action": "ah"}))[0], "AH")
+        self.assertEqual(self.fg.Bags.Badge(self.t({"quality": 1, "action": "vendor", "vendor": 5, "market": 3}))[0], "V")
+        self.assertIsNone(self.fg.Bags.Badge(self.t({"quality": 1, "action": "keep"})))
+
+    def test_lowest_other_skips_own(self):
+        rows = self.t([{"unit": 90, "own": True}, {"unit": 100}, {"unit": 120}])
+        self.assertEqual(self.fg.Market.LowestOther(rows), 100)
+        self.assertIsNone(self.fg.Market.LowestOther(self.t([{"unit": 90, "own": True}])))
+
+    def test_pick_price(self):
+        pick = self.fg.Market.PickPrice
+        opt = self.t({"undercut": 1, "floorShare": 0.7})
+        self.assertEqual(pick(500, 600, 50, opt)[:3], (499, "under", True))
+        # Someone dumps at 300 while the market is 600: the floor is 420, so Market advises to wait.
+        self.assertEqual(pick(300, 600, 50, opt)[:3], (420, "dumped", False))
+        self.assertEqual(pick(None, 600, 50, opt)[:3], (600, "market", True))
+        self.assertEqual(pick(None, None, 50, opt)[:3], (150, "guess", True))
+        self.assertEqual(pick(None, None, 0, opt)[1:3], ("nodata", False))
+        # Never below the vendor price plus 10 %.
+        self.assertEqual(pick(60, None, 100, opt)[:3], (110, "dumped", False))
+        self.assertEqual([self.fg.Market.DurationIndex(h) for h in ("2", "8", "24", "x")], [1, 2, 3, 3])
+
+    def test_query_queue_waits_and_recovers(self):
+        self.lua.execute("QREADY, QNOW, QLOG = true, 0, {}")
+        q = self.fg.Market.NewQueue(self.lua.eval("function() return QREADY end"), self.lua.eval("function() return QNOW end"), 5)
+        push = self.lua.eval("function(q, name) q:Push(function() table.insert(QLOG, name) end) end")
+        push(q, "a"); push(q, "b")
+        self.assertEqual(list(self.lua.eval("QLOG").values()), ["a"])  # one at a time
+        q.Done(q)
+        self.assertEqual(list(self.lua.eval("QLOG").values()), ["a", "b"])
+        push(q, "c")  # "b" never answered...
+        self.lua.execute("QNOW = 6")
+        q.Pump(q)  # ...so after the timeout the queue moves on
+        self.assertEqual(list(self.lua.eval("QLOG").values()), ["a", "b", "c"])
+        self.lua.execute("QREADY = false")
+        q.Done(q); push(q, "d")
+        self.assertEqual(len(self.lua.eval("QLOG")), 3)  # throttled: waits
+
+    def test_spell_queue(self):
+        f = self.fg.QoL.SpellQueueFor
+        self.assertEqual(f(42, "ROGUE"), 140)
+        self.assertEqual(f(42, "MAGE"), 190)
+        self.assertEqual(f(0, "WARRIOR"), 100)
+        self.assertEqual(f(900, "PRIEST"), 400)
 
 
 class PrivacyTests(unittest.TestCase):

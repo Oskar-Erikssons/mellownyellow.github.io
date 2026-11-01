@@ -448,6 +448,8 @@ python companion/patch_watch.py --fetch --apply --commit     # hämtar, tillämp
       <thead><tr><th>Kommando</th><th>Funktion</th></tr></thead>
       <tbody>
         <tr><td><code>/fg options</code></td><td>Tema, egna färger och inställningar</td></tr>
+        <tr><td><code>/fg bags</code></td><td>Forever Bags: väskor med säljråd, uppgraderingar, värde och dina andra karaktärer</td></tr>
+        <tr><td><code>/fg queue on</code></td><td>Smart spell queue som följer din ping</td></tr>
         <tr><td><code>/fg route</code></td><td>Var du bör levla, dungeons och kommande klassquests</td></tr>
         <tr><td><code>/fg talents</code></td><td>Nästa talang enligt mallen. <code>/fg talents export</code> ger trädet till webben.</td></tr>
         <tr><td><code>/fg ah</code></td><td>Säljråd för dina väskor, fynd och dina försäljningar</td></tr>
@@ -492,14 +494,30 @@ python patch_watch.py --fetch                                              # pat
         <li>Snabbskanning utan 15-minutersgräns och fullskanning i omgångar som inte låser spelet</li>
         <li>Förråd och förmögenhet för alla dina karaktärer</li>
       </ul>
+      <h3>Nytt i 0.6: Forever Market</h3>
+      <ul>
+        <li><strong>Lägga upp:</strong> en knapp, ett klick per auktion. Priset ligger 1 koppar under billigaste säljare men aldrig under ett golv från din prishistorik.</li>
+        <li><strong>Avbryta:</strong> hittar dina auktioner där någon bjudit under och avbryter nästa vid varje klick.</li>
+        <li><strong>Fynd:</strong> kolla, köp och bekräfta auktioner under handlarens pris.</li>
+      </ul>
       <h3>Nästa steg</h3>
       <ul>
-        <li><strong>Lägga upp med ett klick per auktion:</strong> pris enligt marknaden, underbud med regler du väljer.</li>
-        <li><strong>Avbryta underbjudna auktioner</strong> med en skanning av dina egna.</li>
         <li><strong>Hantverksvinst:</strong> kostnad för material mot pris på färdig vara.</li>
         <li><strong>Prisdelning i guilden:</strong> addonen skickar priser mellan guildmedlemmar, så alla får bättre data.</li>
         <li><strong>Prognos:</strong> priset före och efter en ny raid eller fas, utifrån historiken.</li>
       </ul>
+    </div>
+    <div class="card">
+      <h2>Tillsammans med andra addons</h2>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Addon</th><th>Råd</th></tr></thead>
+        <tbody>
+          <tr><td>Bagnon, Baganator</td><td>Forever Bags kan ersätta dem. Den visar också säljråd, uppgraderingar och värde. Har du kvar en annan väskaddon håller sig Forever Bags undan och öppnas med <code>/fg bags</code>.</td></tr>
+          <tr><td>Auctionator</td><td>Forever Market kan ersätta den för att sälja, avbryta och köpa fynd. Behåll Auctionator om du vill ha dess sökningar och inköpslistor; panelerna krockar inte.</td></tr>
+          <tr><td>Naowh: Spell Queue</td><td>Forever Guides smarta spell queue följer din ping automatiskt. Använd den ena eller den andra.</td></tr>
+          <tr><td>Naowh: Combat Timer, Cooldown at Cursor, Healer Mana, Damage Meter</td><td>Behåll Naowh. Forever Guide skulle inte göra dem bättre.</td></tr>
+        </tbody>
+      </table></div>
     </div>
     <div class="card">
       <h2>Upplevelse</h2>

@@ -388,9 +388,10 @@ end
 -- Everything in your bags, with a recommendation. Sorted by value.
 function Auction:BagReport()
     local rows = {}
-    eachBagItem(function(_, _, itemID, count, quality, bound, link)
+    eachBagItem(function(bag, slot, itemID, count, quality, bound, link)
         local d, e = self:Advice(itemID, count, bound)
-        table.insert(rows, { itemID = itemID, link = link, count = count, quality = quality, advice = d, price = e })
+        table.insert(rows, { bag = bag, slot = slot, itemID = itemID, link = link, count = count, quality = quality,
+            advice = d, price = e })
     end)
     table.sort(rows, function(a, b)
         local va = math.max(a.advice.ahEV or 0, a.advice.vendorTotal or 0)

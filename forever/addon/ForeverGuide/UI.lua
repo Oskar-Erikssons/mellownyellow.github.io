@@ -71,6 +71,9 @@ end
 
 local function heading(T, text) return T:Color("accent", text) end
 
+-- Shared with Bags.lua and Market.lua.
+UI.MakeWindow, UI.Button = makeWindow, button
+
 ------------------------------------------------------------------------
 -- Simulator
 ------------------------------------------------------------------------
@@ -214,11 +217,14 @@ local SWITCHES = {
     { "tooltipUpgrade", "Upgrade or downgrade in tooltips", "The item's DPS change against what you wear, from your own stat weights." },
     { "sellJunk", "Merchant button sells grey items", "One click at a merchant sells all grey items." },
     { "sellAdvised", "Merchant button also sells trade goods worth more at a vendor", "Only trade goods and miscellaneous items the advice says to vendor." },
+    { "replaceBags", "Use Forever Bags instead of the game's bags", "One window with sell advice, upgrades, value and your other characters' items." },
+    { "bagBadges", "Sell advice on bag slots", "AH, V (vendor) or junk in the corner of each slot." },
+    { "smartQueue", "Smart spell queue", "Keeps the Spell Queue Window matched to your latency and class, out of combat." },
 }
 
 function UI:ShowOptions()
     if self.options then self.options:Show() return end
-    local f = makeWindow("Forever Guide Options", 460, 600)
+    local f = makeWindow("Forever Guide Options", 460, 690)
     local T = FG.Theme
     local y = -44
 
@@ -425,7 +431,9 @@ end
 
 -- Small panel on the AH frame with the scan button.
 function UI:AttachAuction()
-    local host = AuctionHouseFrame or AuctionFrame
+    -- The modern auction house gets the full Forever Market panel.
+    if AuctionHouseFrame and FG.Market then return FG.Market:Attach() end
+    local host = AuctionFrame
     if not host or self.ahPanel then return end
     local p = CreateFrame("Frame", nil, host, "BackdropTemplate")
     p:SetSize(200, 70)

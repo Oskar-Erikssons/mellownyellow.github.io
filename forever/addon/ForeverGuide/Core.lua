@@ -3,7 +3,7 @@ local ADDON, FG = ...
 FG = FG or {}
 _G.ForeverGuide = FG
 
-FG.VERSION = "0.4.0"
+FG.VERSION = "0.6.0"
 
 -- WoW: Forever reports project 18 ("camelot") and a 1.6x build number.
 local build = select(4, GetBuildInfo())
@@ -37,7 +37,13 @@ local DEFAULTS = {
     sellAdvised = false,
     talentTemplate = 1,   -- which template in GameData.talentTemplates to follow
     tooltipOwned = true,  -- how many of an item your characters own, in tooltips
-    tooltipUpgrade = true, -- upgrade or downgrade in DPS, in tooltips  -- merchant button also sells trade goods the advice says to vendor
+    tooltipUpgrade = true, -- upgrade or downgrade in DPS, in tooltips
+    replaceBags = true,   -- Forever Bags opens instead of the game's bags
+    bagBadges = true,     -- sell advice in the corner of each bag slot
+    bagColumns = 10,
+    marketUndercut = 1,   -- copper below the cheapest other seller
+    marketFloor = 0.7,    -- never post below this share of your market value
+    smartQueue = false,   -- keep the spell queue window matched to your latency  -- merchant button also sells trade goods the advice says to vendor
 }
 
 FG.events = CreateFrame("Frame")
@@ -142,6 +148,8 @@ local HELP = {
     "/fg quick - quick auction scan (lowest prices, no 15-minute limit)",
     "/fg privacy - what Forever Guide stores and sends (nothing)",
     "/fg atlas - zones and dungeons the game knows that Forever Guide does not (scan, export)",
+    "/fg bags [on|off] - open Forever Bags; on/off: use it instead of the game's bags",
+    "/fg queue [on|off] - smart spell queue that follows your latency",
     "/fg talents - next talent point; /fg talents export for the web planner",
 }
 
@@ -186,6 +194,16 @@ SlashCmdList.FOREVERGUIDE = function(msg)
         FG.Auction:QuickScan()
     elseif cmd == "privacy" then
         FG:Print(FG.PRIVACY)
+    elseif cmd == "bags" and (a == "on" or a == "off") then
+        onOff(a, "replaceBags")
+    elseif cmd == "bags" then
+        FG.Bags:Toggle()
+    elseif cmd == "queue" and (a == "on" or a == "off") then
+        onOff(a, "smartQueue")
+        FG.QoL:ApplySpellQueue(true)
+    elseif cmd == "queue" then
+        FG:Print(string.format("Recommended spell queue: %d ms (latency %d ms, now %s ms). /fg queue on keeps it matched.",
+            FG.QoL:Recommended(), FG.QoL:Latency(), C_CVar.GetCVar("SpellQueueWindow") or "?"))
     elseif cmd == "atlas" and a == "scan" then
         FG:Print("Reading the game's maps...")
         FG.Atlas:Scan(function() FG.UI:ShowAtlas() end)

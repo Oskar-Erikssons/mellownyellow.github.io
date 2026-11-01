@@ -49,6 +49,8 @@ Kopiera båda mapparna i `addon/` till spelets `Interface/AddOns`.
 | `/fg quick` | Snabbskanning av AH: lägsta pris för allt, utan 15-minutersgräns. |
 | `/fg privacy` | Visar vad addonen sparar och skickar (ingenting). |
 | `/fg atlas` | Zoner och instanser som spelet känner till men som saknas i datan. `/fg atlas export` ger text till `atlas_import.py`. |
+| `/fg bags [on\|off]` | Forever Bags. `on`/`off` styr om den ersätter spelets väskor. |
+| `/fg queue [on\|off]` | Smart spell queue som följer din ping och klass. |
 
 Quest-fönstret får också knappen **Read aloud**.
 
@@ -102,6 +104,29 @@ Forever har inget öppet API för auktionshuset. Addonen samlar därför priser 
 | Säljknapp | Hos handlare: säljer grått och, om du vill, handelsvaror som är värda mer där |
 
 `python forever_ah.py --wow "..." --out prices.json` gör en fil som du öppnar på webbsidans flik Auktionshus.
+
+## Forever Bags och Forever Market
+
+Två egna alternativ till Bagnon och Auctionator. De är skrivna från grunden, eftersom originalens licenser inte tillåter återanvändning. De är bättre där Forever Guide vet mer än de: vad saker är värda.
+
+**Forever Bags** (`/fg bags`):
+- Ett fönster för alla väskor. Spelets egna knappar används, så allt klickande fungerar som vanligt.
+- Säljråd i hörnet av varje plats (AH, V eller junk) och en grön pil på uppgraderingar.
+- Väskornas värde, lediga platser och guld.
+- Sökning med smarta ord: `ah`, `vendor`, `junk`, `upgrade`, `quest`, `bound` (även på svenska).
+- Klick på namnet visar dina andra karaktärers saker, även när de är utloggade.
+- Om Bagnon eller en annan väskaddon är igång håller sig Forever Bags undan.
+
+**Forever Market** (panel bredvid auktionshuset):
+
+| Flik | Gör |
+|---|---|
+| Sell | Lägger upp nästa föremål per klick. Priset ligger 1 koppar under billigaste säljare men aldrig under ett golv (70 % av marknadsvärdet, minst handlarpris + 10 %). Dumpar andra under golvet avråder Market. |
+| Cancel | Hittar dina auktioner där någon bjudit under. Varje klick avbryter nästa. |
+| Flips | Kollar, köper och bekräftar auktioner under handlarpriset. Priset kontrolleras igen före bekräftelse. |
+| Scan | Full- och snabbskanning. |
+
+Frågor till auktionshuset köas en i taget, som servern kräver. En fråga som servern tappar låser inte kön.
 
 ## Patchnoter med lokal språkmodell
 
