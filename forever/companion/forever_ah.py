@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Exports the addon's auction house data to prices.json for the web page.
+"""Exports the addon's auction house data and your characters' inventory to prices.json.
+
+The file stays on your computer; the web page reads it locally in your browser and uploads nothing.
 
 The addon collects prices from your own scans (Forever has no public auction API).
 They are saved in ForeverGuide.lua when you log out. This script turns them into a
@@ -20,7 +22,7 @@ import lua_table
 
 
 def collect(files: list[Path]) -> dict:
-    out = {"generated": int(time.time()), "houses": {}, "sales": [], "soldByHour": {}}
+    out = {"generated": int(time.time()), "houses": {}, "sales": [], "soldByHour": {}, "characters": []}
     for f in files:
         db = lua_table.load(f).get("ForeverGuideDB") or {}
         a = db.get("auction") or {}
@@ -40,6 +42,17 @@ def collect(files: list[Path]) -> dict:
             out["sales"].append(s)
         for hour, n in (a.get("soldByHour") or {}).items():
             out["soldByHour"][str(hour)] = out["soldByHour"].get(str(hour), 0) + n
+        names = db.get("itemNames") or {}
+        for key, c in (db.get("characters") or {}).items():
+            items = []
+            for place in ("bags", "bank", "equip"):
+                for item_id, n in (c.get(place) or {}).items():
+                    items.append({"id": int(item_id), "name": names.get(item_id) or names.get(str(item_id)),
+                                  "count": n, "where": place})
+            out.setdefault("characters", []).append({
+                "key": key, "class": c.get("class"), "faction": c.get("faction"), "level": c.get("level"),
+                "money": c.get("money") or 0, "updated": c.get("t"), "bankSeen": bool(c.get("bank")), "items": items,
+            })
     for house in out["houses"]:
         out["houses"][house] = sorted(out["houses"][house].values(), key=lambda x: -(x.get("market") or 0))
     out["sales"].sort(key=lambda s: -s.get("t", 0))
@@ -58,7 +71,7 @@ def main(argv=None) -> int:
     data = collect(files)
     args.out.write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8")
     n = sum(len(v) for v in data["houses"].values())
-    print(f"Wrote {n} item prices and {len(data['sales'])} sales to {args.out}.")
+    print(f"Wrote {n} item prices, {len(data['sales'])} sales and {len(data['characters'])} characters to {args.out}.")
     return 0
 
 

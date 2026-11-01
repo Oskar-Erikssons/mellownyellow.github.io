@@ -160,6 +160,8 @@ DEFAULT_CHAT_FRAME = { AddMessage = function() end }
 SlashCmdList = {}
 UISpecialFrames = {}
 function strsplit(sep, s) local t = {}; for p in (s .. sep):gmatch("(.-)" .. sep) do t[#t + 1] = p end; return unpack(t) end
+function GetBuildInfo() return "1.6.0", "70338", "Oct 1 2026", 16001 end
+WOW_PROJECT_ID = 18
 function UnitName() return "Oskar" end
 function issecretvalue() return false end
 C_VoiceChat = { GetTtsVoices = function() return {
@@ -177,7 +179,7 @@ class AddonLuaTests(unittest.TestCase):
         self.lua = lupa.LuaRuntime(unpack_returned_tuples=True)
         self.lua.execute(WOW_STUBS)
         self.fg = self.lua.eval("{}")
-        for name in ("Core.lua", "GameData.lua", "Theme.lua", "Narrator.lua", "Sim.lua", "Auction.lua", "Route.lua", "UI.lua"):
+        for name in ("Core.lua", "GameData.lua", "Theme.lua", "Narrator.lua", "Sim.lua", "Auction.lua", "Inventory.lua", "Gear.lua", "Professions.lua", "Route.lua", "UI.lua"):
             chunk = self.lua.execute("return function(src, name) return assert((loadstring or load)(src, name)) end")(
                 (ADDON / name).read_text(encoding="utf-8"), name)
             chunk("ForeverGuide", self.fg)
@@ -328,6 +330,120 @@ class RouteLuaTests(AddonLuaTests):
         n = nxt(tpl, self.lua.eval("{ A = 2, B = 1 }"))
         self.assertEqual((n.name, n.rank), ("A", 3))
         self.assertIsNone(nxt(tpl, self.lua.eval("{ A = 3, B = 1 }")))
+
+
+class NewModulesLuaTests(AddonLuaTests):
+    def t(self, py):
+        """Python dicts and lists to Lua tables, all the way down."""
+        if isinstance(py, dict):
+            return self.lua.table_from({k: self.t(v) for k, v in py.items()})
+        if isinstance(py, list):
+            return self.lua.table_from([self.t(v) for v in py])
+        return py
+
+    def test_inventory_key_and_count(self):
+        Inv = self.fg.Inventory
+        self.assertEqual(Inv.Key("Oskar", "Stormbringer", None, True), "Oskar Stormbringer")
+        self.assertEqual(Inv.Key("Oskar", None, "Firemaw", False), "Oskar-Firemaw")
+        chars = self.t({"A": {"bags": {2589: 20}, "bank": {2589: 5}}, "B": {"bags": {2589: 12}, "equip": {999: 1}}})
+        total, rows = Inv.Count(chars, 2589)
+        self.assertEqual(total, 37)
+        self.assertEqual((rows[1].key, rows[1].where), ("A", "20 bags, 5 bank"))
+        worth, items = Inv.Worth(self.t({"money": 1000, "bags": {1: 2}, "bank": {2: 3}}),
+                                 self.lua.eval("function(id, n) return id * n * 10 end"))
+        self.assertEqual((worth, items), (1080, 80))
+
+    def test_gear_values_and_score(self):
+        G = self.fg.Gear
+        v = G.StatValues(self.t({"ap14": 1.4, "meleeCrit1": 2.0, "hit1": 1.0}), self.t({"apStr": 2, "apAgi": 0, "agiCrit": 20}))
+        self.assertAlmostEqual(v.ap, 0.1)
+        self.assertAlmostEqual(v.str, 0.2)
+        self.assertAlmostEqual(v.agi, 0.1)
+        score = G.Score(self.t({"ITEM_MOD_STRENGTH_SHORT": 10, "ITEM_MOD_AGILITY_SHORT": 5, "ITEM_MOD_STAMINA_SHORT": 20}), v)
+        self.assertAlmostEqual(score, 2.5)
+        self.assertEqual(G.SLOTS["INVTYPE_FINGER"][2], 12)
+
+    def test_profession_rank_and_nodes(self):
+        P = self.fg.Professions
+        ranks = self.fg.Data.professionRanks
+        r, ready = P.NextRank(130, 150, 22, ranks)
+        self.assertEqual((r.name, ready), ("Expert", True))
+        r, ready = P.NextRank(130, 150, 15, ranks)
+        self.assertEqual((r.name, ready), ("Expert", False))
+        self.assertIsNone(P.NextRank(300, 300, 60, ranks))
+        can, new = P.Gatherable(self.fg.Data.gatherNodes.Mining, 130, 100)
+        self.assertEqual([new[i + 1].name for i in range(len(new))], ["Iron Deposit"])
+        self.assertEqual(len(can), 4)
+
+    def test_trainer_plan(self):
+        spells = self.t([{"name": "A", "level": 10, "cost": 100, "known": True},
+                         {"name": "B", "level": 12, "cost": 300}, {"name": "C", "level": 14, "cost": 500},
+                         {"name": "D", "level": 14, "cost": 700}, {"name": "E", "level": 30, "cost": 9}])
+        plan = self.fg.Trainer.Plan(spells, 12, 4)
+        self.assertEqual((plan.costNow, plan.nextLevel, plan.costNext, plan.countNext), (300, 14, 1200, 2))
+
+    def test_full_scan_reads_in_batches_and_skips_unknown_items(self):
+        n = 1000
+        self.lua.execute("""
+            local N = ... 
+            FG_TEST_N = N
+        """, n)
+        self.lua.execute("""
+            GetNumAuctionItems = function() return FG_TEST_N end
+            GetAuctionItemInfo = function(_, i)
+                local id = (i % 3 == 0) and 666 or (100 + i % 5)
+                return nil, nil, 2, nil, nil, nil, nil, nil, nil, 200 + i, nil, nil, nil, "Seller", nil, nil, id
+            end
+            GetAuctionItemTimeLeft = function() return 4 end
+            C_Item = { DoesItemExistByID = function(id) return id ~= 666 end }
+        """)
+        steps = self.lua.eval("{ n = 0 }")
+        self.fg.Defer = self.lua.eval("function(fn) FG_STEPS = (FG_STEPS or 0) + 1; fn() end")
+        A = self.fg.Auction
+        A.scanning = "full"
+        got = {}
+        A.ReadFullScan(A, lambda byItem, total: got.update(byItem=byItem, total=total))
+        self.assertEqual(got["total"], n)
+        ids = sorted(k for k in got["byItem"].keys())
+        self.assertNotIn(666, ids)
+        self.assertEqual(sum(len(got["byItem"][k]) for k in ids), n - n // 3)
+        self.assertGreaterEqual(self.lua.eval("FG_STEPS"), 2)  # more than one frame
+        # Closing the AH mid-scan stops reading.
+        A.scanning = False
+        stopped = {}
+        A.ReadFullScan(A, lambda *a: stopped.update(done=True))
+        self.assertEqual(stopped, {})
+
+
+class PrivacyTests(unittest.TestCase):
+    """The addon must never send data: no chat, whispers, addon messages, mail or friends API."""
+
+    FORBIDDEN = ["SendAddonMessage", "SendChatMessage", "C_ChatInfo", "BNSendWhisper", "BNSendGameData",
+                 "C_BattleNet", "SendMail", "C_Club", "C_Social", "DoEmote", "PerformEmote", "C_VoiceChat.SendChat"]
+
+    def test_addon_sends_nothing(self):
+        for f in sorted((ROOT / "addon").rglob("*.lua")):
+            code = f.read_text(encoding="utf-8")
+            for word in self.FORBIDDEN:
+                self.assertNotIn(word, code, f"{f.name} uses {word}")
+
+    def test_web_page_loads_nothing_from_other_sites(self):
+        import re
+        html = (ROOT / "index.html").read_text(encoding="utf-8")
+        external = re.findall(r'<(?:script|link|img|iframe)[^>]+(?:src|href)="(https?:)?//[^"]+"', html)
+        self.assertEqual(external, [])
+        self.assertNotIn("fetch(", html)
+        self.assertNotIn("XMLHttpRequest", html)
+
+    def test_tools_ask_before_sending_elsewhere(self):
+        import privacy
+        self.assertTrue(privacy.is_local("http://localhost:11434"))
+        self.assertTrue(privacy.is_local("http://192.168.1.20:8080/v1"))
+        self.assertTrue(privacy.is_local("http://gpu-box.local/v1"))
+        self.assertFalse(privacy.is_local("https://openrouter.ai/api/v1"))
+        with self.assertRaises(SystemExit):
+            privacy.require_consent("https://openrouter.ai/api/v1", False, "Quest texts")
+        privacy.require_consent("https://openrouter.ai/api/v1", True, "Quest texts")
 
 
 class GeneratedDataTests(unittest.TestCase):

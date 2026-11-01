@@ -121,3 +121,25 @@ test("template schedule and problems", () => {
     assert.ok(pts <= 51, `${cls} template uses ${pts} points`);
   }
 });
+
+test("inventory worth uses AH or vendor, whichever pays", () => {
+  const rows = [{ id: 1, vendor: 100, market: 5000, saleRate: 0.6 }, { id: 2, vendor: 50 }];
+  const chars = FG.inventoryWorth([
+    { key: "A", money: 1000, items: [{ id: 1, count: 5, where: "bags" }, { id: 2, count: 2, where: "bank" }, { id: 1, count: 1, where: "equip" }] },
+    { key: "B", money: 10, items: [] },
+  ], rows);
+  assert.equal(chars[0].key, "A");
+  assert.equal(chars[0].valued.length, 2); // worn items are not for sale
+  assert.equal(chars[0].valued[0].action, "ah");
+  assert.equal(chars[0].valued[1].value, 100);
+  assert.ok(chars[0].worth > 1000 + 500 * 5);
+});
+
+test("profession ranks and gathering", () => {
+  assert.deepEqual(FG.nextRank(130, 150, 22).name, "Expert");
+  assert.equal(FG.nextRank(130, 150, 15).ready, false);
+  assert.equal(FG.nextRank(300, 300, 60), null);
+  const list = FG.gatherList("Herbalism", 50, [{ id: 785, market: 300 }, { id: 2447, market: 20 }]);
+  assert.equal(list[0].name, "Mageroyal");
+  assert.ok(list.filter((n) => n.can).length === 4);
+});

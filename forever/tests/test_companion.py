@@ -109,6 +109,11 @@ class PatchWatchTests(unittest.TestCase):
     def data(self):
         return json.loads((self.tmp / "gamedata.json").read_text(encoding="utf-8"))
 
+    def test_remote_model_needs_consent(self):
+        with self.assertRaises(SystemExit):
+            patch_watch.main(["--file", str(self.tmp / "notes.txt"), "--llm-url", "https://api.example.com/v1", "--api", "openai"])
+        self.assertEqual(self.llm.requests, [])
+
     def test_dry_run_changes_nothing_but_writes_report(self):
         with mock.patch.object(patch_watch, "run_tests", lambda: (True, "")):
             self.assertEqual(self.run_watch(), 0)
@@ -219,10 +224,17 @@ class AuctionExportTests(unittest.TestCase):
 [2770] = { ["name"] = "Copper Ore", ["v"] = 5, ["m"] = 140, ["t"] = 1700000000 },
 }, ["prev"] = {} } },
 ["sales"] = { { ["item"] = "Linen Cloth", ["price"] = 1700, ["net"] = 1615, ["t"] = 1700000000 }, },
+["soldByHourDummy"] = 0,
 ["soldByHour"] = { [19] = 4, [20] = 2 },
 },
+["characters"] = { ["Oskar Stormbringer"] = { ["class"] = "MAGE", ["level"] = 34, ["money"] = 12345,
+    ["bags"] = { [2589] = 18 }, ["bank"] = { [4306] = 60 }, ["t"] = 1700000000 } },
+["itemNames"] = { [2589] = "Linen Cloth", [4306] = "Silk Cloth" },
 }''', encoding="utf-8")
             data = forever_ah.collect([sv])
+            ch = data["characters"][0]
+            self.assertEqual((ch["key"], ch["money"], ch["bankSeen"]), ("Oskar Stormbringer", 12345, True))
+            self.assertIn({"id": 4306, "name": "Silk Cloth", "count": 60, "where": "bank"}, ch["items"])
             items = data["houses"]["faction"]
             self.assertEqual([x["id"] for x in items], [2770, 2589])
             self.assertEqual(items[1]["saleRate"], 0.42)

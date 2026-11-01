@@ -3,7 +3,16 @@ local ADDON, FG = ...
 FG = FG or {}
 _G.ForeverGuide = FG
 
-FG.VERSION = "0.3.0"
+FG.VERSION = "0.4.0"
+
+-- WoW: Forever reports project 18 ("camelot") and a 1.6x build number.
+local build = select(4, GetBuildInfo())
+FG.IsForever = WOW_PROJECT_ID == 18 or (build and build >= 16000 and build < 20000) or false
+
+-- Privacy: Forever Guide never sends anything. It does not use chat, whispers, addon messages
+-- or any other channel; all data stays in your SavedVariables file on your own computer.
+-- tests/test_forever.py checks the code for sending functions, so this cannot slip in by mistake.
+FG.PRIVACY = "Forever Guide sends nothing. Everything stays in your SavedVariables file."
 
 local DEFAULTS = {
     autoRead = true,      -- read quest text automatically when an NPC shows it
@@ -26,7 +35,9 @@ local DEFAULTS = {
     duration = "24",      -- auction length used in the advice: "2", "8" or "24" hours
     sellJunk = true,      -- merchant button sells grey items
     sellAdvised = false,
-    talentTemplate = 1,   -- which template in GameData.talentTemplates to follow  -- merchant button also sells trade goods the advice says to vendor
+    talentTemplate = 1,   -- which template in GameData.talentTemplates to follow
+    tooltipOwned = true,  -- how many of an item your characters own, in tooltips
+    tooltipUpgrade = true, -- upgrade or downgrade in DPS, in tooltips  -- merchant button also sells trade goods the advice says to vendor
 }
 
 FG.events = CreateFrame("Frame")
@@ -91,6 +102,9 @@ local function initDB()
     end
     db.voiceQueue = db.voiceQueue or {}
     db.snapshots = db.snapshots or {}
+    db.characters = db.characters or {}
+    db.itemNames = db.itemNames or {}
+    db.profAnnounced = db.profAnnounced or {}
     FG.db = db
     FG.settings = db.settings
 end
@@ -122,7 +136,11 @@ local HELP = {
     "/fg ah - auction house: prices, advice, flips and sales",
     "/fg house auto|faction|neutral - which auction house prices to use",
     "/fg tooltip on|off - prices in item tooltips",
-    "/fg route - where to level, dungeons and class quests coming up",
+    "/fg route - where to level, dungeons, class quests and your next trainer visit",
+    "/fg bank - what all your characters own and are worth; /fg find <name> searches it",
+    "/fg prof - professions: next rank and what you can gather, by AH value",
+    "/fg quick - quick auction scan (lowest prices, no 15-minute limit)",
+    "/fg privacy - what Forever Guide stores and sends (nothing)",
     "/fg talents - next talent point; /fg talents export for the web planner",
 }
 
@@ -157,6 +175,16 @@ SlashCmdList.FOREVERGUIDE = function(msg)
         FG:Print("house = " .. a)
     elseif cmd == "options" or cmd == "theme" then
         FG.UI:ShowOptions()
+    elseif cmd == "bank" or cmd == "inventory" then
+        FG.UI:ShowInventory()
+    elseif cmd == "find" and a then
+        FG.UI:ShowInventory(strtrim((msg or ""):sub(6)))
+    elseif cmd == "prof" then
+        FG.UI:ShowProfessions()
+    elseif cmd == "quick" then
+        FG.Auction:QuickScan()
+    elseif cmd == "privacy" then
+        FG:Print(FG.PRIVACY)
     elseif cmd == "route" then
         FG.UI:ShowRoute()
     elseif cmd == "talents" and a == "export" then

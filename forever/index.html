@@ -5,9 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Forever Guide</title>
 <meta name="description" content="Välj klass och ras, simulera din karaktär, få quest-texter upplästa och sälj smartare på auktionshuset i WoW: Forever.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <script>
   // Apply the saved theme before the page paints, so it never flashes the wrong colors.
   try {
@@ -42,8 +39,9 @@
   html { scroll-behavior: smooth; }
   @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; animation: none !important; } }
   body { margin: 0; background: var(--bg); background-image: var(--glow); background-repeat: no-repeat; color: var(--text);
-    font: 16px/1.6 Inter, system-ui, -apple-system, "Segoe UI", sans-serif; transition: background-color .3s, color .3s; }
-  h1, h2, .brand { font-family: Cinzel, Georgia, serif; letter-spacing: .3px; }
+    font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; transition: background-color .3s, color .3s; }
+  /* System fonts only: the page loads nothing from other sites. */
+  h1, h2, .brand { font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif; letter-spacing: .3px; font-variant: small-caps; }
   h1 { color: var(--title); font-size: clamp(30px, 6vw, 48px); margin: 0; line-height: 1.15; }
   h2 { color: var(--title); font-size: 22px; margin: 0 0 12px; }
   h3 { color: var(--accent); font-size: 16px; margin: 20px 0 8px; font-weight: 600; }
@@ -114,7 +112,7 @@
   .Alliance { color: var(--alliance); } .Horde { color: var(--horde); }
   .pos { color: var(--good); } .neg { color: var(--bad); } .error { color: var(--bad); }
   .verdict { display: flex; gap: 14px; align-items: center; padding: 16px; border-radius: var(--radius); background: var(--accent-soft); border: 1px solid var(--accent); }
-  .verdict .big { font-family: Cinzel, Georgia, serif; font-size: 24px; color: var(--title); }
+  .verdict .big { font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif; font-size: 24px; color: var(--title); }
   .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-top: 12px; }
   .stat { background: var(--surface-2); border-radius: var(--radius-sm); padding: 10px 12px; }
   .stat .v { font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
@@ -149,7 +147,7 @@
   /* Route */
   .route-step { display: grid; grid-template-columns: 86px 1fr; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--line); }
   .route-step:last-child { border-bottom: 0; }
-  .lvl { font-family: Cinzel, Georgia, serif; color: var(--title); font-size: 20px; line-height: 1.2; }
+  .lvl { font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif; color: var(--title); font-size: 20px; line-height: 1.2; }
   .zone-main { font-weight: 600; font-size: 17px; }
   .pill { display: inline-block; font-size: 13px; padding: 2px 10px; border-radius: 999px; background: var(--surface-2); margin: 3px 4px 0 0; }
   .pill.ms { background: var(--accent-soft); color: var(--text); border: 1px solid var(--accent); }
@@ -304,6 +302,17 @@
     </div>
   </div>
   <div class="card" id="route-out" aria-live="polite"></div>
+  <div class="card">
+    <h2>Yrken</h2>
+    <p class="lead">Ser när du kan träna nästa rang och vad du kan samla. Med priser inlästa på fliken Auktionshus sorteras det mest värdefulla först. I spelet: <code>/fg prof</code>.</p>
+    <div class="fields">
+      <label>Yrke<select id="p-prof"><option>Mining</option><option>Herbalism</option></select></label>
+      <label>Skicklighet<input type="number" id="p-skill" min="1" max="300" value="130"></label>
+      <label>Nuvarande tak<select id="p-max"><option>75</option><option selected>150</option><option>225</option><option>300</option></select></label>
+      <label>Din nivå<input type="number" id="p-level" min="1" max="60" value="22"></label>
+    </div>
+    <div id="prof-out" style="margin-top:14px" aria-live="polite"></div>
+  </div>
 </section>
 
 <!-- ============ Talents ============ -->
@@ -357,6 +366,7 @@
       <div id="ah-summary" style="margin-top:14px" aria-live="polite"></div>
     </div>
   </div>
+  <div id="inv-out"></div>
   <div id="ah-tables"></div>
 </section>
 
@@ -448,6 +458,15 @@ python forever_ah.py --wow "..." --out prices.json                         # pri
 python patch_watch.py --fetch                                              # patchnoter med lokal modell</pre>
     <p class="small muted">Lägg aldrig din Battle.net client secret på den här sidan. Allt på GitHub Pages är offentligt.</p>
   </div>
+  <div class="card">
+    <h2>Integritet: inget lämnar din dator utan ditt ja</h2>
+    <ul>
+      <li><strong>Addonen skickar ingenting.</strong> Den använder varken chatt, viskningar eller addonmeddelanden. Allt sparas i din egen sparfil. Ett test stoppar varje ändring som skulle börja skicka data.</li>
+      <li><strong>Webbsidan laddar inget från andra sidor.</strong> Den använder datorns egna typsnitt. Filer du öppnar läses i din webbläsare och laddas inte upp.</li>
+      <li><strong>Verktygen pratar bara med din dator och ditt hemnätverk.</strong> Röstmotorn <code>http</code> och patchverktyget vägrar skicka text längre bort om du inte skriver <code>--allow-remote</code>.</li>
+      <li><strong>Det som hämtas utifrån</strong> sker bara när du ber om det: patchnoter med <code>--fetch</code> och Battle.net-data med <code>blizzard_fetch.py</code>. Inga uppgifter om dig skickas med.</li>
+    </ul>
+  </div>
 </section>
 
 <!-- ============ Ideas ============ -->
@@ -462,6 +481,8 @@ python patch_watch.py --fetch                                              # pat
         <li>Fynd: köp under handlarens pris och sälj direkt</li>
         <li>Försäljningshistorik från posten och bästa tid att lägga upp</li>
         <li>Säljknapp hos handlare</li>
+        <li>Snabbskanning utan 15-minutersgräns och fullskanning i omgångar som inte låser spelet</li>
+        <li>Förråd och förmögenhet för alla dina karaktärer</li>
       </ul>
       <h3>Nästa steg</h3>
       <ul>
@@ -478,7 +499,8 @@ python patch_watch.py --fetch                                              # pat
         <li><strong>Svensk översättning</strong> av quest-texter med svensk röst</li>
         <li><strong>Äventyrsdagbok</strong> på webben med alla quests du läst</li>
         <li><strong>Hardcore-varning</strong> med röst vid låg hälsa och farliga fiender</li>
-        <li><strong>Uppgraderingsråd</strong> i tooltipen utifrån simulatorns statvikter</li>
+        <li><strong>Library Books och Sleeping Bag</strong>: Forevers nya samlarsystem, med spårare och kartnålar</li>
+        <li><strong>Dungeonjournal</strong> med bossar och byten för din nivå</li>
       </ul>
       <h3>Inom reglerna</h3>
       <p class="small">Allt bygger på det Blizzard tillåter. Addonen agerar bara när du klickar. Verktygen läser addonens sparfil och rör aldrig spelet medan det körs.</p>
@@ -767,7 +789,7 @@ python patch_watch.py --fetch                                              # pat
     const now = Math.floor(Date.now() / 1000);
     const rows = [
       [2589, "Linen Cloth", 13, 85, 70, 90, 0.55], [2592, "Wool Cloth", 33, 140, 120, 150, 0.5], [4306, "Silk Cloth", 150, 620, 560, 600, 0.45],
-      [2770, "Copper Ore", 5, 140, 120, 150, 0.6], [2771, "Tin Ore", 25, 260, 240, 250, 0.4], [2318, "Light Leather", 15, 60, 55, 70, 0.35],
+      [2770, "Copper Ore", 5, 140, 120, 150, 0.6], [2772, "Iron Ore", 150, 900, 820, 950, 0.45], [2771, "Tin Ore", 25, 260, 240, 250, 0.4], [2318, "Light Leather", 15, 60, 55, 70, 0.35],
       [4338, "Mageweave Cloth", 250, 1500, 1350, 1400, 0.5], [3575, "Iron Bar", 200, 900, 800, 950, 0.3], [818, "Tigerseye", 100, 2200, 1900, 2500, 0.25],
       [2672, "Stringy Wolf Meat", 4, 30, 25, 28, 0.2], [774, "Malachite", 100, 650, 600, 700, 0.3], [2449, "Earthroot", 10, 90, 80, 85, 0.45],
       [2886, "Crag Boar Rib", 7, 6, 5, 8, 0.1], [1475, "Small Venom Sac", 75, 40, 35, 60, 0.2], [5465, "Small Spider Leg", 2, 0, 1, 0, 0],
@@ -775,7 +797,14 @@ python patch_watch.py --fetch                                              # pat
     const items = rows.map(([id, name, vendor, market, min, h, sr]) => ({ id, name, vendor, market: market || null, min, historical: h || null, saleRate: sr || null, quantity: Math.round(Math.random() * 300), observed: 40, updated: now - 3600 }));
     const soldByHour = {};
     for (let h = 0; h < 24; h++) soldByHour[h] = Math.round(4 + 10 * Math.exp(-((h - 20) ** 2) / 10) + 3 * Math.exp(-((h - 12) ** 2) / 6));
-    return { generated: now, houses: { faction: items }, sales: [{ item: "Silk Cloth", price: 12400, net: 11780, t: now - 7200 }, { item: "Copper Ore", price: 2800, net: 2660, t: now - 86400 }], soldByHour };
+    const characters = [
+      { key: "Oskar Stormbringer", class: "MAGE", level: 34, money: 1254300, bankSeen: true, items: [
+        { id: 4338, name: "Mageweave Cloth", count: 40, where: "bags" }, { id: 4306, name: "Silk Cloth", count: 60, where: "bank" },
+        { id: 818, name: "Tigerseye", count: 3, where: "bank" }, { id: 2589, name: "Linen Cloth", count: 18, where: "bags" }] },
+      { key: "Oskar Ironfoot", class: "WARRIOR", level: 18, money: 85600, bankSeen: false, items: [
+        { id: 2772, name: "Iron Ore", count: 12, where: "bags" }, { id: 2770, name: "Copper Ore", count: 35, where: "bags" }] },
+    ];
+    return { generated: now, characters, houses: { faction: items }, sales: [{ item: "Silk Cloth", price: 12400, net: 11780, t: now - 7200 }, { item: "Copper Ore", price: 2800, net: 2660, t: now - 86400 }], soldByHour };
   }
 
   function rowsFor(house) {
@@ -789,6 +818,8 @@ python patch_watch.py --fetch                                              # pat
 
   function renderAH() {
     if (!prices) return;
+    renderInventory();
+    renderProf();
     const rows = rowsFor(ahHouse);
     const ah = rows.filter((r) => r.d.action === "ah").length;
     const flips = rows.filter((r) => r.flip > 0);
@@ -869,6 +900,8 @@ python patch_watch.py --fetch                                              # pat
   ["#r-class", "#r-from", "#r-to"].forEach((id) => $(id).addEventListener("input", renderRoute));
   fillRouteClasses(); renderRoute();
 
+  renderProf();
+
   // ---------------- Talent planner ----------------
   const TT = FG.DATA.talentTemplates;
   $("#t-class").innerHTML = Object.keys(FG.CLASSES).map((c) => `<option value="${c}">${esc(FG.CLASSES[c].name)}</option>`).join("");
@@ -942,6 +975,39 @@ python patch_watch.py --fetch                                              # pat
   fillTemplates();
   tree = savedTree($("#t-class").value); ranks = tree ? { ...(tree.ranks || {}) } : {};
   renderTalents();
+
+  // ---------------- Professions ----------------
+  function renderProf() {
+    const prof = $("#p-prof").value, skill = +$("#p-skill").value || 1, max = +$("#p-max").value, level = +$("#p-level").value || 1;
+    const r = FG.nextRank(skill, max, level);
+    const rows = FG.gatherList(prof, skill, prices ? prices.houses[ahHouse] : null);
+    $("#prof-out").innerHTML = `
+      <div class="verdict" style="margin-bottom:12px"><div>${r
+        ? (r.ready ? `<div class="big">Träna ${esc(r.name)} nu</div><div class="small">Taket höjs till ${r.cap}.</div>`
+          : `<div class="big">${esc(r.name)}</div><div class="small">Kräver skicklighet ${r.needSkill} och nivå ${r.needLevel}.</div>`)
+        : `<div class="big">Högsta rangen</div>`}</div></div>
+      <div class="table-wrap"><table><thead><tr><th>Fyndplats</th><th class="num">Kräver</th><th class="num">AH-pris</th></tr></thead><tbody>
+      ${rows.map((n) => `<tr class="${n.can ? "" : "muted"}"><td>${esc(n.name)}${n.can ? "" : ' <span class="tag">senare</span>'}</td><td class="num">${n.skill}</td><td class="num">${n.market ? money(n.market) : "–"}</td></tr>`).join("")}
+      </tbody></table></div>`;
+  }
+  ["#p-prof", "#p-skill", "#p-max", "#p-level"].forEach((id) => $(id).addEventListener("input", renderProf));
+
+  // ---------------- Inventory ----------------
+  function renderInventory() {
+    if (!prices || !(prices.characters || []).length) { $("#inv-out").innerHTML = ""; return; }
+    const chars = FG.inventoryWorth(prices.characters, prices.houses[ahHouse], ahHouse);
+    const total = chars.reduce((a, c) => a + c.worth, 0);
+    $("#inv-out").innerHTML = `<div class="card"><h2>Förråd: ${money(total)}</h2>
+      <p class="lead">Guld plus väskor och bank, värderat till det du faktiskt skulle få (AH eller handlare).</p>
+      <div class="stats">${chars.map((c) => `<div class="stat"><div class="v">${money(c.worth)}</div>
+        <div class="k">${esc(c.key)} · nivå ${esc(c.level ?? "?")} · guld ${money(c.money)}${c.bankSeen ? "" : " · banken inte sedd"}</div></div>`).join("")}</div>
+      <h3>Mest värt att sälja</h3>
+      <div class="table-wrap"><table><thead><tr><th>Föremål</th><th>Karaktär</th><th class="num">Antal</th><th class="num">Värde</th><th class="num">Råd</th></tr></thead><tbody>
+      ${chars.flatMap((c) => c.valued.map((v) => ({ ...v, who: c.key }))).sort((a, b) => b.value - a.value).slice(0, 12)
+        .map((v) => `<tr><td>${esc(v.name || "Föremål " + v.id)}</td><td>${esc(v.who)} <span class="tag">${v.where === "bank" ? "bank" : "väska"}</span></td>
+        <td class="num">${v.count}</td><td class="num">${money(v.value)}</td><td class="num ${v.action === "ah" ? "pos" : ""}">${ACTION[v.action]}</td></tr>`).join("")}
+      </tbody></table></div></div>`;
+  }
 
   // ---------------- Updates ----------------
   const D = FG.DATA;

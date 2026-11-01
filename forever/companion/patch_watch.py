@@ -35,6 +35,8 @@ import sys
 from html.parser import HTMLParser
 from pathlib import Path
 
+from privacy import require_consent
+
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data" / "gamedata.json"
 CHANGELOG = ROOT / "data" / "changelog.json"
@@ -359,11 +361,14 @@ def main(argv=None) -> int:
     ap.add_argument("--api", choices=["ollama", "openai"], default="ollama")
     ap.add_argument("--llm-url", default="http://localhost:11434")
     ap.add_argument("--model", default="qwen3:14b")
+    ap.add_argument("--allow-remote", action="store_true",
+                    help="Allow sending the patch notes and game data to a model server outside your computer")
     ap.add_argument("--apply", action="store_true", help="Write accepted changes (otherwise only show them)")
     ap.add_argument("--commit", action="store_true", help="Commit applied changes with git")
     ap.add_argument("--limit", type=int, default=5, help="Max items per RSS source")
     args = ap.parse_args(argv)
 
+    require_consent(args.llm_url, args.allow_remote, "Patch notes and game data")
     data = json.loads(DATA.read_text(encoding="utf-8"))
     texts = []
     for f in args.file:

@@ -203,19 +203,22 @@ end
 -- Options: theme, colors and switches
 ------------------------------------------------------------------------
 
+-- Each switch has a help text, shown when you hover it.
 local SWITCHES = {
-    { "autoRead", "Read quest text automatically" },
-    { "readGossip", "Also read NPC gossip" },
-    { "voiceVariety", "Different built-in voice per NPC" },
-    { "stripEmotes", "Skip emotes like <The dwarf laughs.>" },
-    { "tooltip", "Show AH and vendor prices in tooltips" },
-    { "sellJunk", "Merchant button sells grey items" },
-    { "sellAdvised", "Merchant button also sells trade goods worth more at a vendor" },
+    { "autoRead", "Read quest text automatically", "Reads quest text aloud as soon as an NPC shows it." },
+    { "readGossip", "Also read NPC gossip", "Reads what NPCs say when you talk to them, not only quests." },
+    { "voiceVariety", "Different built-in voice per NPC", "Each NPC keeps its own voice and speed, picked from the voices on your computer." },
+    { "stripEmotes", "Skip emotes like <The dwarf laughs.>", "Leaves out stage directions in angle brackets when reading." },
+    { "tooltip", "AH and vendor prices in tooltips", "Market value, sale chance and whether to sell on the AH or to a vendor." },
+    { "tooltipOwned", "What your characters own, in tooltips", "How many of the item each of your characters has, in bags, bank or worn." },
+    { "tooltipUpgrade", "Upgrade or downgrade in tooltips", "The item's DPS change against what you wear, from your own stat weights." },
+    { "sellJunk", "Merchant button sells grey items", "One click at a merchant sells all grey items." },
+    { "sellAdvised", "Merchant button also sells trade goods worth more at a vendor", "Only trade goods and miscellaneous items the advice says to vendor." },
 }
 
 function UI:ShowOptions()
     if self.options then self.options:Show() return end
-    local f = makeWindow("Forever Guide Options", 460, 520)
+    local f = makeWindow("Forever Guide Options", 460, 600)
     local T = FG.Theme
     local y = -44
 
@@ -267,8 +270,21 @@ function UI:ShowOptions()
         label:SetPoint("LEFT", cb, "RIGHT", 2, 0)
         label:SetText(sw[2])
         T:Register(label, function(l, th) l:SetTextColor(th:Get("text")) end)
+        cb:SetScript("OnEnter", function(b)
+            GameTooltip:SetOwner(b, "ANCHOR_RIGHT")
+            GameTooltip:SetText(sw[2], 1, 1, 1)
+            GameTooltip:AddLine(sw[3], nil, nil, nil, true)
+            GameTooltip:Show()
+        end)
+        cb:SetScript("OnLeave", GameTooltip_Hide)
         y = y - 28
     end
+    local privacy = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    privacy:SetPoint("BOTTOMLEFT", 16, 14)
+    privacy:SetPoint("BOTTOMRIGHT", -16, 14)
+    privacy:SetJustifyH("LEFT")
+    privacy:SetText(FG.PRIVACY)
+    T:Register(privacy, function(l, th) l:SetTextColor(th:Get("muted")) end)
     self.options = f
 end
 
@@ -327,16 +343,71 @@ function UI:ShowAuction()
     if not self.auction then
         local f = makeWindow("Forever Guide Auction House", 620, 520)
         addScrollText(f, -40, 44)
-        local scan = button(f, "Full scan", 120, function() FG.Auction:FullScan() end)
+        local scan = button(f, "Full scan", 100, function() FG.Auction:FullScan() end)
         scan:SetPoint("BOTTOMLEFT", 14, 12)
-        local refresh = button(f, "Refresh", 100, function() UI:RefreshAuction() end)
-        refresh:SetPoint("LEFT", scan, "RIGHT", 8, 0)
+        local quick = button(f, "Quick scan", 100, function() FG.Auction:QuickScan() end)
+        quick:SetPoint("LEFT", scan, "RIGHT", 8, 0)
+        local refresh = button(f, "Refresh", 90, function() UI:RefreshAuction() end)
+        refresh:SetPoint("LEFT", quick, "RIGHT", 8, 0)
         local opts = button(f, "Options", 100, function() UI:ShowOptions() end)
         opts:SetPoint("LEFT", refresh, "RIGHT", 8, 0)
         self.auction = f
     end
     self:RefreshAuction()
     self.auction:Show()
+end
+
+------------------------------------------------------------------------
+-- Inventory across characters
+------------------------------------------------------------------------
+
+function UI:InventoryText(search)
+    local Inv, T, A = FG.Inventory, FG.Theme, FG.Auction
+    local lines = {}
+    local function add(t) table.insert(lines, t) end
+    if search and search ~= "" then
+        add(T:Color("title", "Search: " .. search))
+        local hits = Inv:Find(search)
+        for i, h in ipairs(hits) do
+            if i > 20 then break end
+            add(string.format("%s  x%d", h.name, h.total))
+            for _, r in ipairs(h.rows) do add("    " .. r.key .. ": " .. r.where) end
+        end
+        if #hits == 0 then add(T:Color("muted", "Nothing found. Open each character's bags and bank once so they are saved.")) end
+        return table.concat(lines, "\n")
+    end
+    local rows, total = Inv:Summary()
+    add(T:Color("title", "All characters: " .. A.Money(total)))
+    add(T:Color("muted", "Gold plus items at what you would get for them (AH or vendor, whichever is better)."))
+    add(" ")
+    for _, r in ipairs(rows) do
+        local c = r.c
+        add(string.format("%s  %s", T:Color("accent", r.key), A.Money(r.worth)))
+        add(string.format("    level %s %s · gold %s · items %s%s", c.level or "?", (c.class or ""):lower(),
+            A.Money(c.money or 0), A.Money(r.items), c.bank and "" or T:Color("muted", " · bank not seen yet")))
+    end
+    add(" ")
+    add(T:Color("muted", "Search with /fg find <name>. " .. FG.PRIVACY))
+    return table.concat(lines, "\n")
+end
+
+function UI:ShowInventory(search)
+    if not self.inventory then
+        self.inventory = makeWindow("Forever Guide Inventory", 540, 460)
+        addScrollText(self.inventory)
+    end
+    FG.Inventory:SaveBags()
+    self.inventory:SetBody(self:InventoryText(search))
+    self.inventory:Show()
+end
+
+function UI:ShowProfessions()
+    if not self.professions then
+        self.professions = makeWindow("Forever Guide Professions", 460, 420)
+        addScrollText(self.professions)
+    end
+    self.professions:SetBody(FG.Professions:Text())
+    self.professions:Show()
 end
 
 function UI:RefreshAuction()
@@ -354,10 +425,13 @@ function UI:AttachAuction()
     p.title:SetPoint("TOP", 0, -8)
     p.title:SetText("Forever Guide")
     FG.Theme:Register(p, function(frame, T) T:SkinWindow(frame) end)
+    p:SetHeight(96)
     local scan = button(p, "Full scan", 90, function() FG.Auction:FullScan() end)
-    scan:SetPoint("BOTTOMLEFT", 8, 10)
-    local open = button(p, "Advice", 90, function() UI:ShowAuction() end)
-    open:SetPoint("BOTTOMRIGHT", -8, 10)
+    scan:SetPoint("BOTTOMLEFT", 8, 36)
+    local quick = button(p, "Quick scan", 90, function() FG.Auction:QuickScan() end)
+    quick:SetPoint("BOTTOMRIGHT", -8, 36)
+    local open = button(p, "Advice", 184, function() UI:ShowAuction() end)
+    open:SetPoint("BOTTOM", 0, 10)
     self.ahPanel = p
 end
 

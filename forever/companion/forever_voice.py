@@ -32,6 +32,7 @@ from pathlib import Path
 import numpy as np
 
 import lua_table
+from privacy import require_consent
 
 SAMPLE_RATE = 24000
 
@@ -280,6 +281,8 @@ def main(argv=None) -> int:
     ap.add_argument("--url", help="http engine: server base URL, e.g. http://localhost:8880/v1")
     ap.add_argument("--model", default="tts-1", help="http engine: model name, e.g. fish-audio/drama-3")
     ap.add_argument("--format", default="wav", help="http engine: audio format to ask for (wav, mp3)")
+    ap.add_argument("--allow-remote", action="store_true",
+                    help="http engine: allow sending quest texts to a server outside your computer/home network")
     ap.add_argument("--quests", type=Path, help="quests.json from quest_db.py: voice quests before you meet them")
     ap.add_argument("--zone", type=int, help="With --quests: only this zone ID")
     ap.add_argument("--min-level", type=int, default=1)
@@ -327,6 +330,7 @@ def main(argv=None) -> int:
     elif args.engine == "http":
         if not args.url:
             ap.error("the http engine needs --url")
+        require_consent(args.url, args.allow_remote, "Quest texts")
         engine = engine_cls(args.url, args.model, os.environ.get("TTS_API_KEY"), args.format)
     else:
         engine = engine_cls()

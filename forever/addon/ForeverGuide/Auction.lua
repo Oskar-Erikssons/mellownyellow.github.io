@@ -164,13 +164,21 @@ end
 -- Scanning
 ------------------------------------------------------------------------
 
+-- Forever uses the modern C_AuctionHouse API (with copper prices and 2/8/24 hour auctions).
+-- The classic API is kept as a fallback in case a client lacks it.
 local modern = C_AuctionHouse and C_AuctionHouse.ReplicateItems ~= nil
+local BATCH = 400 -- listings handled per frame, so a big scan never freezes the game
 Auction.scanning = false
+
+-- Runs fn on the next frame. Tests replace FG.Defer to run at once.
+FG.Defer = FG.Defer or function(fn) C_Timer.After(0, fn) end
 
 function Auction:CanFullScan()
     local a = self:DB()
-    local wait = (a.lastFull or 0) + FG.Data.auction.fullScanCooldown - time()
-    if wait > 0 then return false, string.format("Next full scan in %d min.", math.ceil(wait / 60)) end
+    -- The server's cooldown starts when the scan is requested, not when it ends.
+    local wait = (a.lastRequest or a.lastFull or 0) + FG.Data.auction.fullScanCooldown - time()
+    if wait > 0 then return false, string.format("Next full scan in %d min %d s.", math.floor(wait / 60), wait % 60) end
+    if self.scanning then return false, "A scan is already running." end
     if not modern and CanSendAuctionQuery then
         local _, canAll = CanSendAuctionQuery()
         if not canAll then return false, "The server does not allow a full scan right now." end
@@ -181,9 +189,9 @@ end
 function Auction:FullScan()
     local ok, why = self:CanFullScan()
     if not ok then FG:Print(why) return end
-    self.scanning = true
-    self.scanStarted = GetTime()
-    FG:Print("Full scan started. It can take a minute.")
+    self.scanning = "full"
+    self:DB().lastRequest = time()
+    FG:Print("Full scan started. Keep the auction house open; it can take a minute.")
     if modern then
         C_AuctionHouse.ReplicateItems()
     else
@@ -191,31 +199,53 @@ function Auction:FullScan()
     end
 end
 
--- Reads every listing from the finished full scan.
-local function readFullScan()
-    local byItem = {}
-    local function add(itemID, count, buyout, tl, owner)
-        if itemID and count and count > 0 and buyout and buyout > 0 then
-            byItem[itemID] = byItem[itemID] or {}
-            table.insert(byItem[itemID], { unit = math.floor(buyout / count), count = count, tl = tl, owner = FG.Safe(owner) })
-        end
+-- Quick scan: an empty browse search lists the lowest price and quantity of every item.
+-- It has no 15-minute limit, but gives no sale chance (that needs the full scan's listings).
+function Auction:QuickScan()
+    if not (modern and C_AuctionHouse.SendBrowseQuery) then
+        FG:Print("Quick scan needs the modern auction house.")
+        return
     end
-    local total = 0
+    if self.scanning then FG:Print("A scan is already running.") return end
+    self.scanning = "quick"
+    self.quickCount = 0
+    FG:Print("Quick scan started.")
+    C_AuctionHouse.SendBrowseQuery({ searchString = "", sorts = {}, filters = {}, itemClassFilters = {} })
+end
+
+-- Reads listing i of the finished full scan. Returns itemID, count, buyout, timeLeft (1-4), owner.
+local function readListing(i)
     if modern then
-        total = C_AuctionHouse.GetNumReplicateItems()
-        for i = 0, total - 1 do
-            local _, _, count, _, _, _, _, _, _, buyout, _, _, _, owner, _, _, itemID = C_AuctionHouse.GetReplicateItemInfo(i)
-            local tl = C_AuctionHouse.GetReplicateItemTimeLeft and C_AuctionHouse.GetReplicateItemTimeLeft(i)
-            add(itemID, count, buyout, tl and tl + 1, owner)
-        end
-    else
-        total = GetNumAuctionItems("list")
-        for i = 1, total do
-            local _, _, count, _, _, _, _, _, _, buyout, _, _, _, owner, _, _, itemID = GetAuctionItemInfo("list", i)
-            add(itemID, count, buyout, GetAuctionItemTimeLeft("list", i), owner)
-        end
+        local _, _, count, _, _, _, _, _, _, buyout, _, _, _, owner, _, _, itemID = C_AuctionHouse.GetReplicateItemInfo(i)
+        local tl = C_AuctionHouse.GetReplicateItemTimeLeft and C_AuctionHouse.GetReplicateItemTimeLeft(i)
+        return itemID, count, buyout, tl and tl + 1, owner
     end
-    return byItem, total
+    local _, _, count, _, _, _, _, _, _, buyout, _, _, _, owner, _, _, itemID = GetAuctionItemInfo("list", i)
+    return itemID, count, buyout, GetAuctionItemTimeLeft("list", i), owner
+end
+
+-- Reads all listings a few hundred per frame, then calls done(byItem, total).
+-- Listings whose item the client does not know are skipped (a known server glitch).
+function Auction:ReadFullScan(done)
+    local first = modern and 0 or 1
+    local total = modern and C_AuctionHouse.GetNumReplicateItems() or GetNumAuctionItems("list")
+    local last = first + total - 1
+    local byItem, i = {}, first
+    local exists = C_Item and C_Item.DoesItemExistByID
+    local function step()
+        if self.scanning ~= "full" then return end -- aborted, e.g. the AH was closed
+        local stop = math.min(last, i + BATCH - 1)
+        for n = i, stop do
+            local itemID, count, buyout, tl, owner = readListing(n)
+            if itemID and (not exists or exists(itemID)) and count and count > 0 and buyout and buyout > 0 then
+                byItem[itemID] = byItem[itemID] or {}
+                table.insert(byItem[itemID], { unit = math.floor(buyout / count), count = count, tl = tl, owner = FG.Safe(owner) })
+            end
+        end
+        i = stop + 1
+        if i > last then done(byItem, total) else FG.Defer(step) end
+    end
+    step()
 end
 
 local function packListings(list)
@@ -233,8 +263,11 @@ function Auction.UnpackListings(s)
 end
 
 function Auction:FinishFullScan()
+    self:ReadFullScan(function(byItem, total) self:StoreFullScan(byItem, total) end)
+end
+
+function Auction:StoreFullScan(byItem, total)
     self.scanning = false
-    local byItem, total = readFullScan()
     if total == 0 then
         -- Forever answers a throttled scan with an empty market instead of an error. Keep the old data.
         FG:Print("The scan came back empty, most likely throttled by the server. Your saved prices are kept. Try again in 15 minutes.")
@@ -282,32 +315,46 @@ function Auction:FinishFullScan()
     if FG.UI and FG.UI.RefreshAuction then FG.UI:RefreshAuction() end
 end
 
--- Passive capture: every search you make updates prices for what you looked at.
-function Auction:CaptureBrowse()
-    if self.scanning then return end
+-- Browse results give the lowest price and quantity per item. Keep an older market value if we have one.
+function Auction:RecordBrowse(results)
     local now = time()
-    if modern and C_AuctionHouse.GetBrowseResults then
-        for _, r in ipairs(C_AuctionHouse.GetBrowseResults() or {}) do
-            local id = r.itemKey and r.itemKey.itemID
-            if id and r.minPrice and r.minPrice > 0 then
-                local e = self:Items()[id]
-                -- Browse results only give the lowest price, so keep an older market value if we have one.
-                self:Record(id, e and e.m or r.minPrice, r.minPrice, r.totalQuantity or 0, e and e.n or 0, now)
-            end
+    for _, r in ipairs(results or {}) do
+        local id = r.itemKey and r.itemKey.itemID
+        if id and r.minPrice and r.minPrice > 0 and (r.totalQuantity or 0) > 0 then
+            local e = self:Items()[id]
+            self:Record(id, e and e.m or r.minPrice, r.minPrice, r.totalQuantity, e and e.n or 0, now)
+            self.quickCount = (self.quickCount or 0) + 1
         end
-    elseif GetNumAuctionItems then
-        local byItem = {}
-        for i = 1, GetNumAuctionItems("list") do
-            local _, _, count, _, _, _, _, _, _, buyout, _, _, _, _, _, _, itemID = GetAuctionItemInfo("list", i)
-            if itemID and buyout and buyout > 0 and count and count > 0 then
-                byItem[itemID] = byItem[itemID] or {}
-                table.insert(byItem[itemID], { unit = math.floor(buyout / count), count = count })
-            end
+    end
+end
+
+-- After each batch of browse results: ask for more during a quick scan, else finish.
+function Auction:BrowseStep()
+    if self.scanning ~= "quick" then return end
+    if C_AuctionHouse.HasFullBrowseResults and not C_AuctionHouse.HasFullBrowseResults() then
+        C_AuctionHouse.RequestMoreBrowseResults()
+        return
+    end
+    self.scanning = false
+    self:DB().lastQuick = time()
+    FG:Print(string.format("Quick scan done: %d items priced.", self.quickCount or 0))
+    if FG.UI and FG.UI.RefreshAuction then FG.UI:RefreshAuction() end
+end
+
+-- Passive capture with the classic API: every search page you look at updates prices.
+function Auction:CaptureClassicPage()
+    if self.scanning or not GetNumAuctionItems then return end
+    local now, byItem = time(), {}
+    for i = 1, GetNumAuctionItems("list") do
+        local _, _, count, _, _, _, _, _, _, buyout, _, _, _, _, _, _, itemID = GetAuctionItemInfo("list", i)
+        if itemID and buyout and buyout > 0 and count and count > 0 then
+            byItem[itemID] = byItem[itemID] or {}
+            table.insert(byItem[itemID], { unit = math.floor(buyout / count), count = count })
         end
-        for id, list in pairs(byItem) do
-            local market, min, qty, n = Auction.Aggregate(list)
-            if market then self:Record(id, market, min, qty, n, now) end
-        end
+    end
+    for id, list in pairs(byItem) do
+        local market, min, qty, n = Auction.Aggregate(list)
+        if market then self:Record(id, market, min, qty, n, now) end
     end
 end
 
@@ -444,9 +491,9 @@ end
 
 local ACTION_TEXT = { ah = "Sell on the AH", vendor = "Sell to a vendor", keep = "Keep" }
 
-function Auction:TooltipLines(itemID, count)
+function Auction:TooltipLines(itemID)
     if not FG.settings.tooltip then return {} end
-    local d, e = self:Advice(itemID, count or 1)
+    local d, e = self:Advice(itemID, 1)
     local T = FG.Theme
     local lines = {}
     local function add(left, right) table.insert(lines, { left, right }) end
@@ -463,21 +510,28 @@ function Auction:TooltipLines(itemID, count)
     return lines
 end
 
+-- Tooltip lines come from several modules: prices, what you own and upgrades.
 local function hookTooltips()
-    local function addLines(tooltip, itemID)
+    local function addLines(tooltip, itemID, link)
         if not itemID then return end
-        for _, l in ipairs(Auction:TooltipLines(itemID)) do
-            if l[2] ~= "" then tooltip:AddDoubleLine(l[1], l[2], 1, 1, 1, 1, 1, 1) else tooltip:AddLine(l[1]) end
+        local providers = { Auction, FG.Inventory, FG.Gear }
+        for _, p in ipairs(providers) do
+            for _, l in ipairs(p and p:TooltipLines(itemID, link) or {}) do
+                if l[2] ~= "" then tooltip:AddDoubleLine(l[1], l[2], 1, 1, 1, 1, 1, 1) else tooltip:AddLine(l[1]) end
+            end
         end
     end
     if TooltipDataProcessor and Enum.TooltipDataType then
         TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, function(tooltip, data)
-            if tooltip == GameTooltip or tooltip == ItemRefTooltip then addLines(tooltip, data and data.id) end
+            if tooltip == GameTooltip or tooltip == ItemRefTooltip then
+                local _, link = tooltip:GetItem()
+                addLines(tooltip, data and data.id, link)
+            end
         end)
     else
         GameTooltip:HookScript("OnTooltipSetItem", function(tooltip)
             local _, link = tooltip:GetItem()
-            addLines(tooltip, link and tonumber(link:match("item:(%d+)")))
+            addLines(tooltip, link and tonumber(link:match("item:(%d+)")), link)
         end)
     end
 end
@@ -492,11 +546,25 @@ FG:On("PLAYER_LOGIN", function()
 end)
 FG:On("AUCTION_HOUSE_SHOW", function() if FG.UI then FG.UI:AttachAuction() end end)
 FG:On("AUCTION_ITEM_LIST_UPDATE", function()
-    if Auction.scanning and not modern then Auction:FinishFullScan() else Auction:CaptureBrowse() end
+    if Auction.scanning == "full" and not modern then Auction:FinishFullScan() else Auction:CaptureClassicPage() end
 end)
 FG:On("REPLICATE_ITEM_LIST_UPDATE", function()
-    if Auction.scanning then Auction:FinishFullScan() end
+    if Auction.scanning == "full" then Auction:FinishFullScan() end
 end)
-FG:On("AUCTION_HOUSE_BROWSE_RESULTS_UPDATED", function() Auction:CaptureBrowse() end)
+FG:On("AUCTION_HOUSE_BROWSE_RESULTS_UPDATED", function()
+    if Auction.scanning == "quick" then Auction.quickCount = 0 end
+    Auction:RecordBrowse(C_AuctionHouse.GetBrowseResults())
+    Auction:BrowseStep()
+end)
+FG:On("AUCTION_HOUSE_BROWSE_RESULTS_ADDED", function(added)
+    Auction:RecordBrowse(added)
+    Auction:BrowseStep()
+end)
+FG:On("AUCTION_HOUSE_CLOSED", function()
+    if Auction.scanning then
+        FG:Print("The auction house closed, so the scan stopped. Your saved prices are kept.")
+        Auction.scanning = false
+    end
+end)
 FG:On("MAIL_INBOX_UPDATE", function() Auction:ReadMail() end)
 FG:On("MERCHANT_SHOW", function() if FG.UI then FG.UI:AttachMerchant() end end)

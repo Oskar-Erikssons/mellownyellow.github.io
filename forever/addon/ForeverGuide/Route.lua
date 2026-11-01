@@ -79,6 +79,12 @@ function Route:Text()
         add(T:Color("accent", "Coming up:"))
         for _, m in ipairs(ms) do add(string.format("  Level %d: %s", m.level, m.text)) end
     end
+    local plan = FG.Trainer and FG.Trainer:PlanText()
+    if plan then
+        add(" ")
+        add(T:Color("accent", "Class trainer:"))
+        add(plan)
+    end
     local next = Talents:Next()
     if next then
         add(" ")

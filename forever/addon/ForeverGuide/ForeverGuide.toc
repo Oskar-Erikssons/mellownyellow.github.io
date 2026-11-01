@@ -1,8 +1,8 @@
 ## Interface: 16001
 ## Title: Forever Guide
-## Notes: Quest narrator with many voices, stat/spell simulator and auction house advisor for WoW: Forever.
+## Notes: Quest narrator, simulator, leveling route, talents, professions, inventory and auction advice for WoW: Forever. Sends no data.
 ## Author: Oskar Eriksson
-## Version: 0.3.0
+## Version: 0.4.0
 ## SavedVariables: ForeverGuideDB
 ## OptionalDeps: ForeverGuide_Voices
 
@@ -12,5 +12,8 @@ Theme.lua
 Narrator.lua
 Sim.lua
 Auction.lua
+Inventory.lua
+Gear.lua
+Professions.lua
 Route.lua
 UI.lua

@@ -382,7 +382,43 @@
     return { ranks, schedule, problems };
   }
 
-  const api = { planRoute, parseTalents, canAdd, canRemove, applyTemplate, pointsAt, DATA, CLASSES, RACES, RACE_FIT, RATES, decideSale, vendorFlips, money, scoreClasses, scoreRaces, parseExport, runSim, compareRaces, spellResult, meleeDPS, rangedDPS };
+  // ---------- Inventory across characters ----------
+
+  // Worth of each character: gold plus bags and bank at what you would get (AH or vendor).
+  function inventoryWorth(characters, priceRows, house = "faction") {
+    const byId = new Map((priceRows || []).map((r) => [r.id, r]));
+    return (characters || []).map((c) => {
+      let items = 0;
+      const valued = [];
+      for (const it of c.items || []) {
+        if (it.where === "equip") continue;
+        const p = byId.get(it.id) || {};
+        const d = decideSale({ vendor: p.vendor || 0, market: p.market, saleRate: p.saleRate, count: it.count }, { house });
+        const value = (d.action === "ah" ? d.ahEV : d.vendorTotal) || 0;
+        items += value;
+        valued.push({ ...it, name: it.name || p.name, value, action: d.action });
+      }
+      valued.sort((a, b) => b.value - a.value);
+      return { ...c, itemsValue: items, worth: (c.money || 0) + items, valued };
+    }).sort((a, b) => b.worth - a.worth);
+  }
+
+  // ---------- Professions ----------
+
+  function nextRank(skill, maxSkill, level) {
+    const r = DATA.professionRanks.find((x) => x.cap > maxSkill);
+    return r ? { ...r, ready: skill >= r.needSkill && level >= r.needLevel } : null;
+  }
+
+  // Nodes this skill can gather, best auction value first when prices are known.
+  function gatherList(profession, skill, priceRows) {
+    const byId = new Map((priceRows || []).map((r) => [r.id, r]));
+    return (DATA.gatherNodes[profession] || [])
+      .map((n) => ({ ...n, can: n.skill <= skill, market: (byId.get(n.item) || {}).market || null }))
+      .sort((a, b) => (b.can - a.can) || ((b.market || 0) - (a.market || 0)) || (a.skill - b.skill));
+  }
+
+  const api = { inventoryWorth, nextRank, gatherList, planRoute, parseTalents, canAdd, canRemove, applyTemplate, pointsAt, DATA, CLASSES, RACES, RACE_FIT, RATES, decideSale, vendorFlips, money, scoreClasses, scoreRaces, parseExport, runSim, compareRaces, spellResult, meleeDPS, rangedDPS };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.ForeverGuide = api;
 })(typeof window !== "undefined" ? window : globalThis);

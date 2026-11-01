@@ -9,6 +9,14 @@ En följeslagare till **World of Warcraft: Forever**. Den består av fyra delar:
 | Röstverktyg | `companion/forever_voice.py`, `quest_db.py` | Skapar AI-röster med öppen källkod, även zonpaket i förväg. |
 | Underhåll | `companion/patch_watch.py`, `build_data.py` | En lokal språkmodell läser patchnoter och uppdaterar speldatan. |
 
+## Integritet
+
+Forever Guide skickar ingenting utan ditt samtycke:
+
+- **Addonen** använder varken chatt, viskningar, addonmeddelanden eller post. Allt sparas i din egen SavedVariables-fil. Testet `PrivacyTests` stoppar varje ändring som skulle börja skicka data.
+- **Webbsidan** laddar inget från andra sidor, inte ens typsnitt. Filer du öppnar läses i webbläsaren och laddas inte upp.
+- **Verktygen** pratar bara med din dator och ditt hemnätverk. Röstmotorn `http` och `patch_watch.py` stannar med ett felmeddelande om adressen ligger längre bort, tills du lägger till `--allow-remote`.
+
 All speldata (racials, stridsregler, AH-avgifter) ligger i `data/gamedata.json`. Både webben och addonen läser den, så en hotfix kräver ingen kodändring.
 
 ## Varför tre delar?
@@ -36,6 +44,10 @@ Kopiera båda mapparna i `addon/` till spelets `Interface/AddOns`.
 | `/fg variety on\|off` | En egen inbyggd röst och ett eget tempo per NPC. |
 | `/fg route` | Var du bör levla, dungeons och kommande klassquests. |
 | `/fg talents` | Nästa talang enligt mallen. `/fg talents export` ger trädet till webbens talangplanerare. |
+| `/fg bank` | Förråd och förmögenhet för alla dina karaktärer. `/fg find <namn>` söker i det. |
+| `/fg prof` | Yrken: nästa rang och vad du kan samla, sorterat efter AH-värde. |
+| `/fg quick` | Snabbskanning av AH: lägsta pris för allt, utan 15-minutersgräns. |
+| `/fg privacy` | Visar vad addonen sparar och skickar (ingenting). |
 
 Quest-fönstret får också knappen **Read aloud**.
 
@@ -83,6 +95,9 @@ Forever har inget öppet API för auktionshuset. Addonen samlar därför priser 
 | Handlare eller AH | Räknar med avgift, deposition och upp till tre försök. Säljs det inte, går det till handlaren. |
 | Fynd | Auktioner under handlarens pris |
 | Försäljningar | Läses från AH-posten och ger summa och bästa tid att lägga upp |
+| Snabbskanning | En tom bläddringssökning ger lägsta pris för allt, utan 15-minutersgräns |
+| Fullskanning i omgångar | Några hundra auktioner per bildruta, så spelet inte hackar. Avbryts om du stänger AH. |
+| Förråd | Väskor, bank och utrustning för alla dina karaktärer, med förmögenhet i AH-värde |
 | Säljknapp | Hos handlare: säljer grått och, om du vill, handelsvaror som är värda mer där |
 
 `python forever_ah.py --wow "..." --out prices.json` gör en fil som du öppnar på webbsidans flik Auktionshus.
@@ -133,3 +148,14 @@ node --test tests/app.test.js          # webbsidans beräkningar
 - Nya ljudfiler syns först när spelet har startats om.
 - AH-avgifterna för neutrala auktionshus är osäkra. De ligger i `data/gamedata.json` och kan rättas där.
 - Det är oklart om Forever använder det moderna eller det klassiska auktions-API:et. Addonen stöder båda.
+
+## Inspiration
+
+Version 0.4 är inspirerad av Auctionator, Bagnon och Naowh Forever. Auctionator och Bagnon har licensen "All Rights Reserved", och Naowh har ingen öppen licens. Därför är ingen kod kopierad. Forever Guide använder bara fakta om spelets API och egna lösningar på idéerna:
+
+| Från | Lärdom | I Forever Guide |
+|---|---|---|
+| Auctionator | Forever använder `C_AuctionHouse`, priser i koppar, auktioner på 2/8/24 timmar, fullskanning i omgångar, snabbskanning via bläddring | `Auction.lua` |
+| Bagnon | Förråd för alla karaktärer; i Forever identifieras de med namn och efternamn, utan realm | `Inventory.lua` |
+| Naowh Forever | BiS-poäng, yrkesranger, nya fyndplatser, träningsplanerare, hjälptext för varje inställning | `Gear.lua`, `Professions.lua`, `UI.lua` |
+
