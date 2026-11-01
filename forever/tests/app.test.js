@@ -42,14 +42,14 @@ test("hit and crit help melee, bosses hurt it", () => {
 test("race comparison lists only allowed races and marks the current one", () => {
   const cmp = FG.compareRaces(FG.parseExport(WARRIOR), { weapon: "sword", targetDiff: 3 });
   assert.equal(cmp.source, "melee");
-  assert.equal(cmp.rows.length, 8);
+  assert.equal(cmp.rows.length, 9); // eight old races and Skyborne
   const human = cmp.rows.find((r) => r.id === "Human");
   assert.ok(human.current);
   assert.ok(Math.abs(human.change) < 1e-9);
   // Sword specialization should make Human beat Night Elf with a sword against a boss.
   assert.ok(human.value > cmp.rows.find((r) => r.id === "NightElf").value);
   const mage = FG.compareRaces(FG.parseExport(MAGE), {});
-  assert.deepEqual(mage.rows.map((r) => r.id).sort(), ["Gnome", "Human", "Scourge", "Troll"]);
+  assert.deepEqual(mage.rows.map((r) => r.id).sort(), ["Gnome", "Human", "Scourge", "Skyborne", "Troll"]);
 });
 
 test("advisor respects faction and role", () => {
@@ -57,7 +57,10 @@ test("advisor respects faction and role", () => {
   assert.ok(!list.some((c) => c.id === "PALADIN"));
   assert.equal(list[0].roles.includes("heal"), true);
   const races = FG.scoreRaces("SHAMAN", { faction: "Horde", focus: "pvp" });
-  assert.deepEqual(races.map((r) => r.id).sort(), ["Orc", "Tauren", "Troll"]);
+  assert.deepEqual(races.map((r) => r.id).sort(), ["Orc", "Skyborne", "Tauren", "Troll"]);
+  // Skyborne mages are Alliance only, Skyborne shamans Horde only.
+  assert.ok(!FG.scoreRaces("MAGE", { faction: "Horde" }).some((r) => r.id === "Skyborne"));
+  assert.ok(FG.scoreRaces("MAGE", { faction: "Alliance" }).some((r) => r.id === "Skyborne"));
 });
 
 test("AH advice matches the shared cases", () => {
@@ -86,14 +89,19 @@ const TREE = "FGT1&class=MAGE&tabs=Arcane|Fire|Frost&t=" + [
 
 test("route covers every level once and stays in the faction", () => {
   for (const race of Object.keys(FG.RACES)) {
-    const steps = FG.planRoute(race, FG.RACES[race].classes[0]);
+    const cls = FG.RACES[race].classes[0];
+    const steps = FG.planRoute(race, cls, 1, 60, "Horde");
     let next = 1;
     for (const st of steps) { assert.equal(st.from, next, race); next = st.to + 1; assert.ok(st.zones.length > 0, `${race} ${st.from}`); }
     assert.equal(next, 61);
-    const fac = FG.RACES[race].faction;
+    const fac = FG.factionOf(race, "Horde", cls);
     for (const st of steps) for (const z of st.zones) assert.ok(z.faction === "Both" || z.faction === fac);
   }
   assert.equal(FG.planRoute("Tauren", "DRUID")[0].zones[0].name, "Mulgore");
+  const sky = FG.planRoute("Skyborne", "MAGE");
+  assert.deepEqual([sky[0].from, sky[0].to, sky[0].zones[0].name], [1, 11, "Zephras Isle"]);
+  assert.ok(sky.some((st) => st.zones.some((z) => z.name === "The Riverglades")));
+  assert.ok(sky[sky.length - 1].zones.some((z) => z.name === "Mount Hyjal"));
   assert.ok(FG.planRoute("Orc", "WARLOCK").some((s) => s.milestones.some((m) => m.text.includes("Voidwalker"))));
 });
 

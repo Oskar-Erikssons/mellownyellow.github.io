@@ -141,6 +141,7 @@ local HELP = {
     "/fg prof - professions: next rank and what you can gather, by AH value",
     "/fg quick - quick auction scan (lowest prices, no 15-minute limit)",
     "/fg privacy - what Forever Guide stores and sends (nothing)",
+    "/fg atlas - zones and dungeons the game knows that Forever Guide does not (scan, export)",
     "/fg talents - next talent point; /fg talents export for the web planner",
 }
 
@@ -185,6 +186,13 @@ SlashCmdList.FOREVERGUIDE = function(msg)
         FG.Auction:QuickScan()
     elseif cmd == "privacy" then
         FG:Print(FG.PRIVACY)
+    elseif cmd == "atlas" and a == "scan" then
+        FG:Print("Reading the game's maps...")
+        FG.Atlas:Scan(function() FG.UI:ShowAtlas() end)
+    elseif cmd == "atlas" and a == "export" then
+        if FG.db.atlas then FG.UI:ShowCopy("Forever Guide Atlas", FG.Atlas.Export(FG.db.atlas.maps)) else FG:Print("Run /fg atlas scan first.") end
+    elseif cmd == "atlas" then
+        FG.UI:ShowAtlas()
     elseif cmd == "route" then
         FG.UI:ShowRoute()
     elseif cmd == "talents" and a == "export" then

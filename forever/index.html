@@ -72,7 +72,7 @@
   nav button[aria-selected="true"] { color: var(--accent-ink, #fff); background: var(--accent); font-weight: 600; }
 
   main { max-width: 1080px; margin: 0 auto; padding: 24px 16px 72px; }
-  section[hidden] { display: none; }
+  [hidden], section[hidden] { display: none !important; }
   .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; margin-bottom: 16px; box-shadow: var(--shadow); }
   .card > :last-child { margin-bottom: 0; }
   .lead { font-size: 15px; color: var(--muted); }
@@ -297,11 +297,17 @@
     <div class="fields">
       <label>Ras<select id="r-race"></select></label>
       <label>Klass<select id="r-class"></select></label>
+      <label id="r-faction-wrap" hidden>Fraktion<select id="r-faction"><option>Alliance</option><option>Horde</option></select></label>
       <label>Från nivå<input type="number" id="r-from" min="1" max="60" value="1"></label>
       <label>Till nivå<input type="number" id="r-to" min="1" max="60" value="60"></label>
     </div>
   </div>
   <div class="card" id="route-out" aria-live="polite"></div>
+  <div class="card">
+    <h2>Nytt i Forever</h2>
+    <p class="lead">Zoner, dungeons och raider som inte fanns 2004. Uppgifter märkta <span class="tag">obekräftad</span> kommer från guider före lanseringen. Skriv <code>/fg atlas</code> i spelet: addonen läser då alla zoner direkt från spelet och visar vad som saknas här.</p>
+    <div id="new-out"></div>
+  </div>
   <div class="card">
     <h2>Yrken</h2>
     <p class="lead">Ser när du kan träna nästa rang och vad du kan samla. Med priser inlästa på fliken Auktionshus sorteras det mest värdefulla först. I spelet: <code>/fg prof</code>.</p>
@@ -397,9 +403,11 @@
         <tr><td><strong>Chatterbox</strong><br><span class="muted tiny">--engine chatterbox</span></td><td>MIT</td><td>Klonar en röst från ett kort klipp. Har reglage för känsla. Passar dvärgar, orcher och alver.</td><td>Grafikkort rekommenderas</td></tr>
         <tr><td><strong>Fish Audio Drama 3</strong><br><span class="muted tiny">--engine http</span></td><td>Fish Audio Community License</td><td>Mest uttrycksfull. Du regisserar med till exempel <code>[viskar skräckslaget]</code>.</td><td>35B, cirka 32–48 GB grafikminne</td></tr>
         <tr><td><strong>Fish Audio S2 Pro</strong><br><span class="muted tiny">--engine http</span></td><td>Endast icke-kommersiellt</td><td>Mycket uttrycksfull, föregångare till Drama 3.</td><td>Grafikkort</td></tr>
-        <tr><td><strong>Piper</strong></td><td>MIT / GPL</td><td>Enkel röst, men snabb och finns på svenska.</td><td>Även Raspberry Pi</td></tr>
+        <tr><td><strong>Piper</strong> (svenska)<br><span class="muted tiny">--engine piper --translate sv</span></td><td>MIT / GPL</td><td>Svenska röster, till exempel sv_SE-nst-medium. Med <code>--translate sv</code> översätter din lokala språkmodell texten först.</td><td>Vanlig dator, även Raspberry Pi</td></tr>
       </tbody>
     </table></div>
+    <h3>Om pianissimo-sv</h3>
+    <p class="small"><strong>KlangAI/pianissimo-sv</strong> (CC BY 4.0) gör tal till text på svenska. Den kan alltså inte läsa upp något, men den kan lyssna. <code>asr_check.py</code> låter den höra varje svenskt klipp och jämföra med texten. Klipp som är svåra att förstå flaggas, så du vet vilka som behöver göras om.</p>
   </div>
 </section>
 
@@ -643,7 +651,7 @@ python patch_watch.py --fetch                                              # pat
         ${c.why.length ? `<p class="muted small">Därför passar den dig: ${esc(c.why.join(", "))}.</p>` : ""}
         <h3>Bästa raserna</h3>
         ${races.map((r, j) => `<div class="result ${j === 0 ? "top" : ""}">
-          <strong>${esc(r.name)}</strong> <span class="tag ${r.faction}">${r.faction}</span><span class="tag">PvE ${r.pve}/5</span><span class="tag">PvP ${r.pvp}/5</span>
+          <strong>${esc(r.name)}</strong> <span class="tag ${r.faction}">${r.faction === "Both" ? "Båda fraktionerna" : r.faction}</span>${r.new ? '<span class="tag pos">Ny i Forever</span>' : ""}<span class="tag">PvE ${r.pve}/5</span><span class="tag">PvP ${r.pvp}/5</span>
           <details><summary>Racials</summary><ul class="small">${r.racials.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></details>
         </div>`).join("")}
       </div>`;
@@ -882,23 +890,37 @@ python patch_watch.py --fetch                                              # pat
     const r = FG.RACES[$("#r-race").value], keep = $("#r-class").value;
     $("#r-class").innerHTML = r.classes.map((c) => `<option value="${c}" ${c === keep ? "selected" : ""}>${esc(FG.CLASSES[c].name)}</option>`).join("");
   }
+  const newTags = (z) => (z.new ? '<span class="tag pos">Ny i Forever</span>' : "") + (z.verified === false ? '<span class="tag">obekräftad</span>' : "");
   function renderRoute() {
     const from = Math.max(1, Math.min(60, +$("#r-from").value || 1)), to = Math.max(from, Math.min(60, +$("#r-to").value || 60));
-    const steps = FG.planRoute($("#r-race").value, $("#r-class").value, from, to);
+    const race = FG.RACES[$("#r-race").value], cls = $("#r-class").value;
+    const fixed = (race.classFaction || {})[cls];
+    $("#r-faction-wrap").hidden = race.faction !== "Both" || !!fixed;
+    const steps = FG.planRoute($("#r-race").value, cls, from, to, fixed || $("#r-faction").value);
     const CONT = { EK: "Eastern Kingdoms", KAL: "Kalimdor" };
     $("#route-out").innerHTML = steps.map((st) => `<div class="route-step">
         <div class="lvl">${st.from}–${st.to}</div>
         <div>
-          ${st.zones[0] ? `<div class="zone-main">${esc(st.zones[0].name)} <span class="tag">${CONT[st.zones[0].continent]}</span></div>
+          ${st.zones[0] ? `<div class="zone-main">${esc(st.zones[0].name)} <span class="tag">${CONT[st.zones[0].continent] || "okänd kontinent"}</span>${newTags(st.zones[0])}</div>
           ${st.zones[0].note ? `<div class="small muted">${esc(st.zones[0].note)}</div>` : ""}
-          ${st.zones.length > 1 ? `<div class="small muted">Alternativ: ${st.zones.slice(1).map((z) => esc(z.name)).join(", ")}</div>` : ""}` : `<div class="muted">Ingen zon hittades.</div>`}
-          <div>${st.dungeons.map((d) => `<span class="pill">${esc(d.name)} ${d.min}–${d.max}</span>`).join("")}
+          ${st.zones.length > 1 ? `<div class="small muted">Alternativ: ${st.zones.slice(1).map((z) => esc(z.name) + (z.new ? " ★" : "")).join(", ")}</div>` : ""}` : `<div class="muted">Ingen zon hittades.</div>`}
+          <div>${st.dungeons.map((d) => `<span class="pill">${esc(d.name)} ${d.min}–${d.max}${d.new ? " ★" : ""}</span>`).join("")}
           ${st.milestones.map((m) => `<span class="pill ms">Nivå ${m.level}: ${esc(m.text)}</span>`).join("")}</div>
         </div></div>`).join("");
   }
   $("#r-race").addEventListener("change", () => { fillRouteClasses(); renderRoute(); });
-  ["#r-class", "#r-from", "#r-to"].forEach((id) => $(id).addEventListener("input", renderRoute));
+  ["#r-class", "#r-from", "#r-to", "#r-faction"].forEach((id) => $(id).addEventListener("input", renderRoute));
   fillRouteClasses(); renderRoute();
+  {
+    const D = FG.DATA, CONT = { EK: "Eastern Kingdoms", KAL: "Kalimdor" };
+    const row = (x, extra) => `<tr><td>${esc(x.name)} ${newTags({ ...x, new: false })}</td><td class="num">${extra}</td><td class="small muted">${esc(x.note || "")}</td></tr>`;
+    $("#new-out").innerHTML = `<div class="table-wrap"><table><thead><tr><th>Namn</th><th class="num">Nivå / storlek</th><th>Om</th></tr></thead><tbody>
+      ${D.zones.filter((z) => z.new).map((z) => row(z, `${z.min}–${z.max} · ${CONT[z.continent] || "okänd kontinent"}`)).join("")}
+      ${D.dungeons.filter((z) => z.new).map((z) => row(z, `dungeon ${z.min}–${z.max}`)).join("")}
+      ${(D.raids || []).map((r) => row(r, `raid · ${r.players} spelare · från ${r.opens}`)).join("")}
+      ${Object.entries(D.races).filter(([, r]) => r.new).map(([, r]) => row({ ...r, note: r.racials.join(" ") }, "nytt folk")).join("")}
+    </tbody></table></div>`;
+  }
 
   renderProf();
 
@@ -1015,7 +1037,8 @@ python patch_watch.py --fetch                                              # pat
   $("#changelog").innerHTML = (D.changelog || []).map((e) => `<div class="entry">
       <strong>${esc(e.date)}</strong> <span class="tag">${esc(e.source)}</span>
       <p style="margin:4px 0">${esc(e.summary)}</p>
-      ${e.changes?.length ? `<ul class="small">${e.changes.map((c) => `<li><code>${esc(c.path)}</code>: ${esc(JSON.stringify(c.old))} → ${esc(JSON.stringify(c.value))}<br><span class="muted">”${esc(c.quote)}”</span></li>`).join("")}</ul>` : ""}
+      ${e.changes?.length ? `<ul class="small">${e.changes.map((c) => c.op === "game" ? `<li>${esc(c.path)}</li>`
+        : `<li><code>${esc(c.path)}</code>: ${esc(JSON.stringify(c.old))} → ${esc(JSON.stringify(c.value))}<br><span class="muted">”${esc(c.quote)}”</span></li>`).join("")}</ul>` : ""}
     </div>`).join("");
 })();
 </script>

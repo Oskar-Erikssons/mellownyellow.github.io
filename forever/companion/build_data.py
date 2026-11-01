@@ -20,7 +20,7 @@ WEB_OUT = ROOT / "gamedata.js"
 LUA_OUT = ROOT / "addon" / "ForeverGuide" / "GameData.lua"
 
 # The addon only needs the rules it calculates with.
-LUA_KEYS = ["schema", "updated", "interface", "combat", "auction", "tts", "zones", "dungeons", "startZones", "milestones", "talentTemplates", "rates", "professionRanks", "gatherNodes"]
+LUA_KEYS = ["schema", "updated", "interface", "combat", "auction", "tts", "zones", "dungeons", "startZones", "milestones", "talentTemplates", "rates", "professionRanks", "gatherNodes", "raids", "otherMaps"]
 
 _IDENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 _LUA_RESERVED = {"and", "break", "do", "else", "elseif", "end", "false", "for", "function", "if", "in",

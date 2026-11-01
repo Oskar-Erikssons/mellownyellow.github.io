@@ -48,6 +48,7 @@ Kopiera båda mapparna i `addon/` till spelets `Interface/AddOns`.
 | `/fg prof` | Yrken: nästa rang och vad du kan samla, sorterat efter AH-värde. |
 | `/fg quick` | Snabbskanning av AH: lägsta pris för allt, utan 15-minutersgräns. |
 | `/fg privacy` | Visar vad addonen sparar och skickar (ingenting). |
+| `/fg atlas` | Zoner och instanser som spelet känner till men som saknas i datan. `/fg atlas export` ger text till `atlas_import.py`. |
 
 Quest-fönstret får också knappen **Read aloud**.
 
@@ -120,6 +121,27 @@ python forever_voice.py --wow "..." --quests quests.json --zone 12 --max-level 1
 ```
 
 Addonen nycklar quest-texter på quest-ID och sparar ditt namn som `$N`. Därför passar ett zonpaket alla dina karaktärer. Quest-texterna tillhör Blizzard, så dela inte de skapade ljudfilerna.
+
+## Nytt i Forever och atlasen
+
+Datan innehåller Forevers nya zoner (Zephras Isle, The Riverglades, Shen'dralas, Mount Hyjal), sju nya dungeons, två raider och folket Skyborne. Uppgifterna kommer från guider före lanseringen och är märkta `"verified": false`.
+
+Spelet är den bästa källan. `/fg atlas` läser alla zoner och instanser direkt från spelet (namn, kontinent och nivåer) och visar vad som saknas här. Så förs det in i datan:
+
+```bash
+python atlas_import.py --file atlas.txt            # visar förslagen
+python atlas_import.py --file atlas.txt --apply    # skriver, kör testerna och ångrar vid fel
+```
+
+## Svensk röst
+
+```bash
+pip install piper-tts                                  # och hämta rösten sv_SE-nst-medium till companion/voices/
+python forever_voice.py --wow "..." --engine piper --translate sv
+python asr_check.py --model models/pianissimo-sv --clips ../addon/ForeverGuide_Voices/sounds --texts ../addon/ForeverGuide_Voices/spoken.json
+```
+
+`--translate sv` översätter quest-texterna med din lokala språkmodell (Ollama) och sparar översättningarna, så att varje text bara översätts en gång. `asr_check.py` låter KlangAI/pianissimo-sv, en svensk modell för taligenkänning (CC BY 4.0), lyssna på klippen och flaggar dem som är svåra att förstå.
 
 ## Battle.net API
 

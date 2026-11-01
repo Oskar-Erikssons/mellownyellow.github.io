@@ -209,7 +209,76 @@ def resample(audio: np.ndarray, src: int, dst: int) -> np.ndarray:
     return np.interp(np.linspace(0, len(audio) - 1, n), np.arange(len(audio)), audio).astype(np.float32)
 
 
-ENGINES = {"test": TestEngine, "kokoro": KokoroEngine, "chatterbox": ChatterboxEngine, "http": HttpEngine}
+class PiperEngine:
+    """Piper (Open Home Foundation). Small, fast on any CPU and has Swedish voices, for
+    example sv_SE-nst-medium. A voice is the path to its .onnx file (with the .onnx.json next to it).
+    Runs the piper program, so nothing leaves your computer."""
+
+    name = "piper"
+    VOICE = "voices/sv_SE-nst-medium.onnx"
+    defaults = {"male": [VOICE], "female": [VOICE], "narrator": VOICE}
+
+    def __init__(self, binary: str = "piper"):
+        import shutil
+        self.binary = shutil.which(binary) or binary
+
+    def speak(self, text: str, voice: str) -> np.ndarray:
+        import subprocess
+        import tempfile
+        import soundfile as sf
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "clip.wav"
+            subprocess.run([self.binary, "--model", voice, "--output_file", str(out)],
+                           input=text.encode("utf-8"), check=True, capture_output=True)
+            audio, sr = sf.read(str(out), dtype="float32")
+        if audio.ndim > 1:
+            audio = audio.mean(axis=1)
+        return resample(audio, sr, SAMPLE_RATE) if sr != SAMPLE_RATE else audio
+
+
+ENGINES = {"test": TestEngine, "kokoro": KokoroEngine, "chatterbox": ChatterboxEngine, "http": HttpEngine,
+           "piper": PiperEngine}
+
+
+# --- Translation with a local language model -------------------------------------
+
+LANGUAGES = {"sv": "Swedish", "de": "German", "fr": "French", "es": "Spanish", "no": "Norwegian", "da": "Danish", "fi": "Finnish"}
+
+
+class Translator:
+    """Translates quest texts with your local model (Ollama or an OpenAI-style server) and remembers
+    every translation in translations.<lang>.json, so each text is translated only once."""
+
+    PROMPT = ("Translate this World of Warcraft quest text into {lang}. Keep the names of people, places and "
+              "items as they are. Keep the tone of a fantasy story. Answer with the translation only.")
+
+    def __init__(self, lang: str, url: str, model: str, api: str, cache: Path, ask=None):
+        self.lang, self.url, self.model, self.api, self.cache_path = lang, url, model, api, cache
+        self.cache = json.loads(cache.read_text(encoding="utf-8")) if cache.exists() else {}
+        self.ask = ask or self._ask
+
+    def _ask(self, text: str) -> str:
+        import requests
+        messages = [{"role": "system", "content": self.PROMPT.format(lang=LANGUAGES.get(self.lang, self.lang))},
+                    {"role": "user", "content": text}]
+        if self.api == "ollama":
+            r = requests.post(self.url.rstrip("/") + "/api/chat", timeout=600, json={
+                "model": self.model, "messages": messages, "stream": False, "options": {"temperature": 0.2}})
+            r.raise_for_status()
+            out = r.json()["message"]["content"]
+        else:
+            r = requests.post(self.url.rstrip("/") + "/chat/completions", timeout=600, json={
+                "model": self.model, "messages": messages, "temperature": 0.2})
+            r.raise_for_status()
+            out = r.json()["choices"][0]["message"]["content"]
+        return re.sub(r"<think>.*?</think>", "", out, flags=re.S).strip()
+
+    def __call__(self, text: str) -> str:
+        key = zlib.crc32(text.encode("utf-8")).to_bytes(4, "big").hex() + f"-{len(text)}"
+        if key not in self.cache:
+            self.cache[key] = self.ask(text)
+            self.cache_path.write_text(json.dumps(self.cache, ensure_ascii=False, indent=1), encoding="utf-8")
+        return self.cache[key]
 
 
 # --- Files -----------------------------------------------------------------
@@ -282,7 +351,12 @@ def main(argv=None) -> int:
     ap.add_argument("--model", default="tts-1", help="http engine: model name, e.g. fish-audio/drama-3")
     ap.add_argument("--format", default="wav", help="http engine: audio format to ask for (wav, mp3)")
     ap.add_argument("--allow-remote", action="store_true",
-                    help="http engine: allow sending quest texts to a server outside your computer/home network")
+                    help="Allow sending quest texts to a server outside your computer/home network")
+    ap.add_argument("--piper", default="piper", help="piper engine: path to the piper program")
+    ap.add_argument("--translate", choices=sorted(LANGUAGES), help="Translate texts with your local model first, e.g. sv")
+    ap.add_argument("--llm-url", default="http://localhost:11434", help="--translate: model server (default Ollama)")
+    ap.add_argument("--llm-model", default="qwen3:14b", help="--translate: model name")
+    ap.add_argument("--llm-api", choices=["ollama", "openai"], default="ollama")
     ap.add_argument("--quests", type=Path, help="quests.json from quest_db.py: voice quests before you meet them")
     ap.add_argument("--zone", type=int, help="With --quests: only this zone ID")
     ap.add_argument("--min-level", type=int, default=1)
@@ -291,6 +365,11 @@ def main(argv=None) -> int:
     ap.add_argument("--limit", type=int, default=0, help="Voice at most this many texts")
     ap.add_argument("--dry-run", action="store_true", help="Only list what would be voiced")
     args = ap.parse_args(argv)
+    # Ask for consent first, before anything is read or sent.
+    if args.engine == "http" and args.url:
+        require_consent(args.url, args.allow_remote, "Quest texts")
+    if args.translate:
+        require_consent(args.llm_url, args.allow_remote, "Quest texts")
 
     if args.saved:
         files = args.saved
@@ -330,15 +409,26 @@ def main(argv=None) -> int:
     elif args.engine == "http":
         if not args.url:
             ap.error("the http engine needs --url")
-        require_consent(args.url, args.allow_remote, "Quest texts")
         engine = engine_cls(args.url, args.model, os.environ.get("TTS_API_KEY"), args.format)
+    elif args.engine == "piper":
+        engine = engine_cls(args.piper)
     else:
         engine = engine_cls()
+    translate = None
+    if args.translate:
+        translate = Translator(args.translate, args.llm_url, args.llm_model, args.llm_api,
+                               Path(f"translations.{args.translate}.json"))
+    # What each clip says, for asr_check.py.
+    spoken_path = addon_dir / "spoken.json"
+    spoken = json.loads(spoken_path.read_text(encoding="utf-8")) if spoken_path.exists() else {}
     prefixes = config.get("prefix", {})
     sound_dir.mkdir(parents=True, exist_ok=True)
     for n, (key, entry) in enumerate(todo.items(), 1):
         voice = choose_voice(entry, config, engine_cls.defaults)
         text = tts_text(entry["text"], args.player_word)
+        if translate:
+            text = translate(text)
+        spoken[key] = text
         if prefixes.get(entry.get("kind")):
             text = f"{prefixes[entry['kind']]} {text}"
         print(f"[{n}/{len(todo)}] {key} ({voice}) {text[:60]}")
@@ -347,6 +437,7 @@ def main(argv=None) -> int:
         except Exception as exc:  # one bad text should not stop the batch
             print(f"  failed: {exc}", file=sys.stderr)
 
+    spoken_path.write_text(json.dumps(spoken, ensure_ascii=False, indent=1), encoding="utf-8")
     count = write_manifest(addon_dir)
     print(f"Manifest.lua lists {count} clips. Restart the game to hear the new voices.")
     return 0

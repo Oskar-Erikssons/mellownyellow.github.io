@@ -16,4 +16,5 @@ Inventory.lua
 Gear.lua
 Professions.lua
 Route.lua
+Atlas.lua
 UI.lua

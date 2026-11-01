@@ -401,6 +401,15 @@ function UI:ShowInventory(search)
     self.inventory:Show()
 end
 
+function UI:ShowAtlas()
+    if not self.atlas then
+        self.atlas = makeWindow("Forever Guide Atlas", 560, 440)
+        addScrollText(self.atlas)
+    end
+    self.atlas:SetBody(FG.Atlas:Text())
+    self.atlas:Show()
+end
+
 function UI:ShowProfessions()
     if not self.professions then
         self.professions = makeWindow("Forever Guide Professions", 460, 420)

@@ -57,6 +57,7 @@ FG.Data = {
             faction = "Alliance",
             continent = "EK",
             note = "Startzon för människor.",
+            uiMap = 1429,
         },
         {
             name = "Dun Morogh",
@@ -65,6 +66,7 @@ FG.Data = {
             faction = "Alliance",
             continent = "EK",
             note = "Startzon för dvärgar och gnomer.",
+            uiMap = 1426,
         },
         {
             name = "Teldrassil",
@@ -73,6 +75,7 @@ FG.Data = {
             faction = "Alliance",
             continent = "KAL",
             note = "Startzon för nattalver.",
+            uiMap = 1438,
         },
         {
             name = "Durotar",
@@ -81,6 +84,7 @@ FG.Data = {
             faction = "Horde",
             continent = "KAL",
             note = "Startzon för orcher och troll.",
+            uiMap = 1411,
         },
         {
             name = "Mulgore",
@@ -89,6 +93,7 @@ FG.Data = {
             faction = "Horde",
             continent = "KAL",
             note = "Startzon för tauren.",
+            uiMap = 1412,
         },
         {
             name = "Tirisfal Glades",
@@ -97,6 +102,7 @@ FG.Data = {
             faction = "Horde",
             continent = "EK",
             note = "Startzon för odöda.",
+            uiMap = 1420,
         },
         {
             name = "Westfall",
@@ -105,6 +111,7 @@ FG.Data = {
             faction = "Alliance",
             continent = "EK",
             note = "",
+            uiMap = 1436,
         },
         {
             name = "Loch Modan",
@@ -113,6 +120,7 @@ FG.Data = {
             faction = "Alliance",
             continent = "EK",
             note = "",
+            uiMap = 1432,
         },
         {
             name = "Darkshore",
@@ -121,6 +129,7 @@ FG.Data = {
             faction = "Alliance",
             continent = "KAL",
             note = "",
+            uiMap = 1439,
         },
         {
             name = "The Barrens",
@@ -129,6 +138,7 @@ FG.Data = {
             faction = "Horde",
             continent = "KAL",
             note = "Hordens stora levlingszon.",
+            uiMap = 1413,
         },
         {
             name = "Silverpine Forest",
@@ -137,6 +147,7 @@ FG.Data = {
             faction = "Horde",
             continent = "EK",
             note = "",
+            uiMap = 1421,
         },
         {
             name = "Redridge Mountains",
@@ -145,6 +156,7 @@ FG.Data = {
             faction = "Alliance",
             continent = "EK",
             note = "",
+            uiMap = 1433,
         },
         {
             name = "Stonetalon Mountains",
@@ -153,6 +165,7 @@ FG.Data = {
             faction = "Both",
             continent = "KAL",
             note = "",
+            uiMap = 1442,
         },
         {
             name = "Ashenvale",
@@ -161,6 +174,7 @@ FG.Data = {
             faction = "Both",
             continent = "KAL",
             note = "",
+            uiMap = 1440,
         },
         {
             name = "Duskwood",
@@ -169,6 +183,7 @@ FG.Data = {
             faction = "Alliance",
             continent = "EK",
             note = "",
+            uiMap = 1431,
         },
         {
             name = "Wetlands",
@@ -177,6 +192,7 @@ FG.Data = {
             faction = "Alliance",
             continent = "EK",
             note = "",
+            uiMap = 1437,
         },
         {
             name = "Hillsbrad Foothills",
@@ -185,6 +201,7 @@ FG.Data = {
             faction = "Both",
             continent = "EK",
             note = "",
+            uiMap = 1424,
         },
         {
             name = "Thousand Needles",
@@ -193,6 +210,7 @@ FG.Data = {
             faction = "Both",
             continent = "KAL",
             note = "",
+            uiMap = 1441,
         },
         {
             name = "Alterac Mountains",
@@ -201,6 +219,7 @@ FG.Data = {
             faction = "Both",
             continent = "EK",
             note = "",
+            uiMap = 1416,
         },
         {
             name = "Arathi Highlands",
@@ -209,6 +228,7 @@ FG.Data = {
             faction = "Both",
             continent = "EK",
             note = "",
+            uiMap = 1417,
         },
         {
             name = "Desolace",
@@ -217,6 +237,7 @@ FG.Data = {
             faction = "Both",
             continent = "KAL",
             note = "",
+            uiMap = 1443,
         },
         {
             name = "Stranglethorn Vale",
@@ -225,6 +246,7 @@ FG.Data = {
             faction = "Both",
             continent = "EK",
             note = "Mycket PvP på PvP-servrar.",
+            uiMap = 1434,
         },
         {
             name = "Dustwallow Marsh",
@@ -233,6 +255,7 @@ FG.Data = {
             faction = "Both",
             continent = "KAL",
             note = "",
+            uiMap = 1445,
         },
         {
             name = "Badlands",
@@ -241,6 +264,7 @@ FG.Data = {
             faction = "Both",
             continent = "EK",
             note = "",
+            uiMap = 1418,
         },
         {
             name = "Swamp of Sorrows",
@@ -249,6 +273,7 @@ FG.Data = {
             faction = "Both",
             continent = "EK",
             note = "",
+            uiMap = 1435,
         },
         {
             name = "Feralas",
@@ -257,6 +282,7 @@ FG.Data = {
             faction = "Both",
             continent = "KAL",
             note = "",
+            uiMap = 1444,
         },
         {
             name = "Tanaris",
@@ -265,6 +291,7 @@ FG.Data = {
             faction = "Both",
             continent = "KAL",
             note = "",
+            uiMap = 1446,
         },
         {
             name = "The Hinterlands",
@@ -273,6 +300,7 @@ FG.Data = {
             faction = "Both",
             continent = "EK",
             note = "",
+            uiMap = 1425,
         },
         {
             name = "Searing Gorge",
@@ -281,6 +309,7 @@ FG.Data = {
             faction = "Both",
             continent = "EK",
             note = "",
+            uiMap = 1427,
         },
         {
             name = "Azshara",
@@ -289,6 +318,7 @@ FG.Data = {
             faction = "Both",
             continent = "KAL",
             note = "",
+            uiMap = 1447,
         },
         {
             name = "Blasted Lands",
@@ -297,6 +327,7 @@ FG.Data = {
             faction = "Both",
             continent = "EK",
             note = "",
+            uiMap = 1419,
         },
         {
             name = "Un'Goro Crater",
@@ -305,6 +336,7 @@ FG.Data = {
             faction = "Both",
             continent = "KAL",
             note = "",
+            uiMap = 1449,
         },
         {
             name = "Felwood",
@@ -313,6 +345,7 @@ FG.Data = {
             faction = "Both",
             continent = "KAL",
             note = "",
+            uiMap = 1448,
         },
         {
             name = "Burning Steppes",
@@ -321,6 +354,7 @@ FG.Data = {
             faction = "Both",
             continent = "EK",
             note = "",
+            uiMap = 1428,
         },
         {
             name = "Western Plaguelands",
@@ -329,6 +363,7 @@ FG.Data = {
             faction = "Both",
             continent = "EK",
             note = "",
+            uiMap = 1422,
         },
         {
             name = "Winterspring",
@@ -337,6 +372,7 @@ FG.Data = {
             faction = "Both",
             continent = "KAL",
             note = "",
+            uiMap = 1452,
         },
         {
             name = "Eastern Plaguelands",
@@ -345,6 +381,7 @@ FG.Data = {
             faction = "Both",
             continent = "EK",
             note = "",
+            uiMap = 1423,
         },
         {
             name = "Silithus",
@@ -353,6 +390,55 @@ FG.Data = {
             faction = "Both",
             continent = "KAL",
             note = "",
+            uiMap = 1451,
+        },
+        {
+            name = "Zephras Isle",
+            min = 1,
+            max = 12,
+            faction = "Both",
+            continent = nil,
+            uiMap = nil,
+            note = "Startzon för Skyborne.",
+            new = true,
+            verified = false,
+            source = "Communityguider före lansering (Icy Veins, Maxroll m.fl.). Kontrollera i spelet med /fg atlas.",
+        },
+        {
+            name = "The Riverglades",
+            min = 35,
+            max = 45,
+            faction = "Both",
+            continent = "EK",
+            uiMap = nil,
+            note = "Ny zon med över 150 nya uppdrag. Källor anger 35–45 eller 36–44.",
+            new = true,
+            verified = false,
+            source = "Communityguider före lansering (Icy Veins, Maxroll m.fl.). Kontrollera i spelet med /fg atlas.",
+        },
+        {
+            name = "Shen'dralas",
+            min = 40,
+            max = 53,
+            faction = "Both",
+            continent = "KAL",
+            uiMap = nil,
+            note = "Ruinerna mellan Mulgore och Desolace. Källor anger 40–45 eller 45–53.",
+            new = true,
+            verified = false,
+            source = "Communityguider före lansering (Icy Veins, Maxroll m.fl.). Kontrollera i spelet med /fg atlas.",
+        },
+        {
+            name = "Mount Hyjal",
+            min = 60,
+            max = 60,
+            faction = "Both",
+            continent = "KAL",
+            uiMap = nil,
+            note = "Slutspelszon efter Archimondes nederlag.",
+            new = true,
+            verified = false,
+            source = "Communityguider före lansering (Icy Veins, Maxroll m.fl.). Kontrollera i spelet med /fg atlas.",
         },
     },
     dungeons = {
@@ -461,6 +547,83 @@ FG.Data = {
             faction = "Both",
             continent = "EK",
         },
+        {
+            name = "Hall of Thanes",
+            min = 13,
+            max = 18,
+            faction = "Both",
+            continent = nil,
+            new = true,
+            verified = false,
+            source = "Communityguider före lansering (Icy Veins, Maxroll m.fl.). Kontrollera i spelet med /fg atlas.",
+            note = "",
+        },
+        {
+            name = "Ruins of Lordaeron",
+            min = 15,
+            max = 20,
+            faction = "Both",
+            continent = "EK",
+            new = true,
+            verified = false,
+            source = "Communityguider före lansering (Icy Veins, Maxroll m.fl.). Kontrollera i spelet med /fg atlas.",
+            note = "",
+        },
+        {
+            name = "Whelgar's Excavation Site",
+            min = 24,
+            max = 29,
+            faction = "Both",
+            continent = "EK",
+            new = true,
+            verified = false,
+            source = "Communityguider före lansering (Icy Veins, Maxroll m.fl.). Kontrollera i spelet med /fg atlas.",
+            note = "",
+        },
+        {
+            name = "The Drowned City",
+            min = 35,
+            max = 40,
+            faction = "Both",
+            continent = nil,
+            new = true,
+            verified = false,
+            source = "Communityguider före lansering (Icy Veins, Maxroll m.fl.). Kontrollera i spelet med /fg atlas.",
+            note = "",
+        },
+        {
+            name = "Krol'dok Stronghold",
+            min = 40,
+            max = 45,
+            faction = "Both",
+            continent = nil,
+            new = true,
+            verified = false,
+            source = "Communityguider före lansering (Icy Veins, Maxroll m.fl.). Kontrollera i spelet med /fg atlas.",
+            note = "Källor anger 40–45 eller 40–55.",
+        },
+        {
+            name = "Blackmaw Hold",
+            min = 55,
+            max = 60,
+            faction = "Both",
+            continent = nil,
+            new = true,
+            verified = false,
+            source = "Communityguider före lansering (Icy Veins, Maxroll m.fl.). Kontrollera i spelet med /fg atlas.",
+            note = "",
+        },
+        {
+            name = "Shaper's Terrace",
+            min = 58,
+            max = 60,
+            faction = "Both",
+            continent = nil,
+            new = true,
+            verified = false,
+            source = "Communityguider före lansering (Icy Veins, Maxroll m.fl.). Kontrollera i spelet med /fg atlas.",
+            note = "",
+        },
     },
     startZones = {
         Human = "Elwynn Forest",
@@ -471,6 +634,7 @@ FG.Data = {
         Troll = "Durotar",
         Tauren = "Mulgore",
         Scourge = "Tirisfal Glades",
+        Skyborne = "Zephras Isle",
     },
     milestones = {
         {
@@ -1081,4 +1245,23 @@ FG.Data = {
             },
         },
     },
+    raids = {
+        {
+            name = "Hyjal Summit",
+            players = 20,
+            opens = "2026-12-09",
+            new = true,
+            verified = false,
+            source = "Communityguider före lansering (Icy Veins, Maxroll m.fl.). Kontrollera i spelet med /fg atlas.",
+        },
+        {
+            name = "The Barrow Deeps",
+            players = 10,
+            opens = "2026-12-09",
+            new = true,
+            verified = false,
+            source = "Communityguider före lansering (Icy Veins, Maxroll m.fl.). Kontrollera i spelet med /fg atlas.",
+        },
+    },
+    otherMaps = { "Stormwind City", "Ironforge", "Darnassus", "Orgrimmar", "Thunder Bluff", "Undercity", "Moonglade", "Deadwind Pass", "Alterac Valley", "Warsong Gulch", "Arathi Basin", "Kalimdor", "Eastern Kingdoms", "Azeroth" },
 }

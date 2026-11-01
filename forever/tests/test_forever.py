@@ -179,7 +179,7 @@ class AddonLuaTests(unittest.TestCase):
         self.lua = lupa.LuaRuntime(unpack_returned_tuples=True)
         self.lua.execute(WOW_STUBS)
         self.fg = self.lua.eval("{}")
-        for name in ("Core.lua", "GameData.lua", "Theme.lua", "Narrator.lua", "Sim.lua", "Auction.lua", "Inventory.lua", "Gear.lua", "Professions.lua", "Route.lua", "UI.lua"):
+        for name in ("Core.lua", "GameData.lua", "Theme.lua", "Narrator.lua", "Sim.lua", "Auction.lua", "Inventory.lua", "Gear.lua", "Professions.lua", "Route.lua", "Atlas.lua", "UI.lua"):
             chunk = self.lua.execute("return function(src, name) return assert((loadstring or load)(src, name)) end")(
                 (ADDON / name).read_text(encoding="utf-8"), name)
             chunk("ForeverGuide", self.fg)
@@ -413,6 +413,31 @@ class NewModulesLuaTests(AddonLuaTests):
         stopped = {}
         A.ReadFullScan(A, lambda *a: stopped.update(done=True))
         self.assertEqual(stopped, {})
+
+
+class AtlasLuaTests(NewModulesLuaTests):
+    def test_diff_finds_new_maps_and_level_changes(self):
+        maps = self.t({
+            1415: {"name": "Eastern Kingdoms", "type": 2},
+            1429: {"name": "Elwynn Forest", "type": 3, "parent": 1415, "min": 1, "max": 10},
+            1437: {"name": "Wetlands", "type": 3, "parent": 1415, "min": 21, "max": 30},
+            2521: {"name": "The Riverglades", "type": 3, "parent": 1415, "min": 36, "max": 44},
+            2600: {"name": "Gilded Hollow", "type": 3, "parent": 1415, "min": 30, "max": 35},
+            1453: {"name": "Stormwind City", "type": 3, "parent": 1415},
+            2700: {"name": "Brand New Crypt", "type": 4, "parent": 1415, "min": 50, "max": 55},
+        })
+        missing, changed = self.fg.Atlas.Diff(maps, self.fg.Data)
+        names = sorted(missing[i + 1].m.name for i in range(len(missing)))
+        self.assertEqual(names, ["Brand New Crypt", "Gilded Hollow"])
+        changes = sorted(changed[i + 1].m.name for i in range(len(changed)))
+        self.assertEqual(changes, ["The Riverglades", "Wetlands"])
+        export = self.fg.Atlas.Export(maps)
+        self.assertTrue(export.startswith("FGZ1&build=70338&m="))
+        self.assertIn("2521:3:1415:36:44:The Riverglades", export)
+
+    def test_route_includes_level_60_zones(self):
+        zones, _ = self.fg.Route.ForLevel(60, "Alliance", "Human", "KAL")
+        self.assertIn("Mount Hyjal", [zones[i + 1].name for i in range(len(zones))])
 
 
 class PrivacyTests(unittest.TestCase):

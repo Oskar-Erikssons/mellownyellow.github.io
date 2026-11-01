@@ -16,6 +16,8 @@ from unittest import mock
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "companion"))
 
+import asr_check  # noqa: E402
+import atlas_import  # noqa: E402
 import forever_ah  # noqa: E402
 import forever_voice  # noqa: E402
 import patch_watch  # noqa: E402
@@ -242,6 +244,119 @@ class AuctionExportTests(unittest.TestCase):
             self.assertEqual(data["soldByHour"]["19"], 4)
         finally:
             shutil.rmtree(tmp)
+
+
+ATLAS = ("FGZ1&build=70338&m=1414:2:947:0:0:Kalimdor;1415:2:947:0:0:Eastern Kingdoms;"
+         "1429:3:1415:1:10:Elwynn Forest;1437:3:1415:21:30:Wetlands;2521:3:1415:36:44:The Riverglades;"
+         "2600:3:1414:30:35:Gilded Hollow;2650:3:1414:0:0:Mystery Vale;1453:3:1415:0:0:Stormwind City;"
+         "2701:4:2600:31:36:Hollow Depths")
+
+
+class AtlasImportTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        shutil.copy(ROOT / "data" / "gamedata.json", self.tmp / "gamedata.json")
+        shutil.copy(ROOT / "data" / "changelog.json", self.tmp / "changelog.json")
+        (self.tmp / "atlas.txt").write_text(ATLAS, encoding="utf-8")
+        self.patches = [mock.patch.object(patch_watch, "DATA", self.tmp / "gamedata.json"),
+                        mock.patch.object(patch_watch, "CHANGELOG", self.tmp / "changelog.json"),
+                        mock.patch.object(patch_watch, "rebuild", lambda: None)]
+        for p in self.patches:
+            p.start()
+
+    def tearDown(self):
+        for p in self.patches:
+            p.stop()
+        shutil.rmtree(self.tmp)
+
+    def test_propose(self):
+        atlas = atlas_import.parse(ATLAS)
+        data = json.loads((self.tmp / "gamedata.json").read_text(encoding="utf-8"))
+        new, changes, skipped = atlas_import.propose(atlas, data)
+        rg = next(z for z in new["zones"] if z["name"] == "The Riverglades")
+        self.assertEqual((rg["min"], rg["max"], rg["uiMap"], rg["verified"]), (36, 44, 2521, True))
+        wet = next(z for z in new["zones"] if z["name"] == "Wetlands")
+        self.assertEqual((wet["min"], wet["max"]), (21, 30))
+        gh = next(z for z in new["zones"] if z["name"] == "Gilded Hollow")
+        self.assertEqual((gh["continent"], gh["new"]), ("KAL", True))
+        hd = next(z for z in new["dungeons"] if z["name"] == "Hollow Depths")
+        self.assertEqual(hd["continent"], "KAL")  # found through its parent zone
+        self.assertIn("Mystery Vale (karta 2650)", skipped)
+        self.assertFalse(any("Stormwind" in c for c in changes))
+
+    def test_apply_with_tests_and_rollback(self):
+        before = (self.tmp / "gamedata.json").read_text(encoding="utf-8")
+        with mock.patch.object(patch_watch, "run_tests", lambda: (False, "boom")):
+            atlas_import.main(["--file", str(self.tmp / "atlas.txt"), "--apply"])
+        self.assertEqual((self.tmp / "gamedata.json").read_text(encoding="utf-8"), before)
+        with mock.patch.object(patch_watch, "run_tests", lambda: (True, "")):
+            atlas_import.main(["--file", str(self.tmp / "atlas.txt"), "--apply"])
+        data = json.loads((self.tmp / "gamedata.json").read_text(encoding="utf-8"))
+        self.assertTrue(any(z["name"] == "Gilded Hollow" for z in data["zones"]))
+        log = json.loads((self.tmp / "changelog.json").read_text(encoding="utf-8"))
+        self.assertTrue(log[0]["source"].startswith("Spelklienten"))
+
+
+class SwedishVoiceTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp)
+
+    def test_cer(self):
+        self.assertEqual(asr_check.cer("Hej, äventyrare!", "hej äventyrare"), 0.0)
+        self.assertAlmostEqual(asr_check.cer("abcd", "abxd"), 0.25)
+        rows = asr_check.check({"d1": Path("a"), "d2": Path("b")}, {"d1": "Döda tio kobolder", "d2": "Gå till Goldshire"},
+                               lambda p: {"a": "döda tio kobolder", "b": "gå till"}[p.name], 0.15)
+        self.assertEqual([(r["key"], r["ok"]) for r in rows], [("d2", False), ("d1", True)])
+
+    def test_translator_caches(self):
+        calls = []
+        t = forever_voice.Translator("sv", "http://localhost:11434", "m", "ollama", self.tmp / "tr.json",
+                                     ask=lambda text: calls.append(text) or "Hej, äventyrare.")
+        self.assertEqual(t("Hello, adventurer."), "Hej, äventyrare.")
+        t2 = forever_voice.Translator("sv", "http://localhost:11434", "m", "ollama", self.tmp / "tr.json", ask=None)
+        self.assertEqual(t2("Hello, adventurer."), "Hej, äventyrare.")  # from the cache, no model call
+        self.assertEqual(len(calls), 1)
+
+    def test_piper_engine_and_translation_end_to_end(self):
+        import os
+        import numpy as np
+        import soundfile as sf
+        fake = self.tmp / "piper"
+        fake.write_text("#!" + sys.executable + "\n"
+                        "import sys, numpy as np, soundfile as sf\n"
+                        "text = sys.stdin.read()\n"
+                        "out = sys.argv[sys.argv.index('--output_file') + 1]\n"
+                        "sf.write(out, np.zeros(22050 * max(1, len(text) // 20), dtype='float32'), 22050)\n",
+                        encoding="utf-8")
+        os.chmod(fake, 0o755)
+        audio = forever_voice.PiperEngine(str(fake)).speak("Hej på dig, äventyrare.", "sv.onnx")
+        self.assertAlmostEqual(len(audio) / forever_voice.SAMPLE_RATE, 1.0, places=2)
+
+        wow = self.tmp / "wow"
+        sv = wow / "WTF" / "Account" / "A" / "SavedVariables"
+        sv.mkdir(parents=True)
+        (sv / "ForeverGuide.lua").write_text('ForeverGuideDB = { ["voiceQueue"] = { ["d7"] = { ["kind"] = "detail", '
+                                             '["text"] = "Kill 10 Kobold Vermin, $N.", ["quest"] = 7 } } }', encoding="utf-8")
+        with mock.patch.object(forever_voice.Translator, "_ask", lambda self, text: "Döda tio koboldsmådjur, äventyrare."):
+            cwd = os.getcwd()
+            os.chdir(self.tmp)
+            try:
+                code = forever_voice.main(["--wow", str(wow), "--engine", "piper", "--piper", str(fake), "--translate", "sv"])
+            finally:
+                os.chdir(cwd)
+        self.assertEqual(code, 0)
+        addon = wow / "Interface" / "AddOns" / "ForeverGuide_Voices"
+        self.assertTrue((addon / "sounds" / "d7.ogg").exists())
+        spoken = json.loads((addon / "spoken.json").read_text(encoding="utf-8"))
+        self.assertEqual(spoken["d7"], "Döda tio koboldsmådjur, äventyrare.")
+
+    def test_translation_to_remote_needs_consent(self):
+        with self.assertRaises(SystemExit):
+            forever_voice.main(["--saved", str(self.tmp / "x.lua"), "--addon", str(self.tmp), "--engine", "test",
+                                "--translate", "sv", "--llm-url", "https://api.example.com/v1"])
 
 
 if __name__ == "__main__":

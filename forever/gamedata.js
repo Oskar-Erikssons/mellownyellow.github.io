@@ -373,6 +373,35 @@
         "Beast Slaying: +5 % skada mot djur",
         "Bow/Throwing Specialization: +1 % crit"
       ]
+    },
+    "Skyborne": {
+      "name": "Skyborne",
+      "faction": "Both",
+      "classes": [
+        "WARRIOR",
+        "HUNTER",
+        "ROGUE",
+        "DRUID",
+        "MAGE",
+        "SHAMAN"
+      ],
+      "classFaction": {
+        "MAGE": "Alliance",
+        "SHAMAN": "Horde"
+      },
+      "offset": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "racials": [
+        "Nytt folk i Forever. Racials är inte bekräftade ännu."
+      ],
+      "new": true,
+      "verified": false,
+      "source": "Communityguider före lansering (Icy Veins, Maxroll m.fl.). Kontrollera i spelet med /fg atlas."
     }
   },
   "raceFit": {
@@ -662,7 +691,8 @@
       "max": 10,
       "faction": "Alliance",
       "continent": "EK",
-      "note": "Startzon för människor."
+      "note": "Startzon för människor.",
+      "uiMap": 1429
     },
     {
       "name": "Dun Morogh",
@@ -670,7 +700,8 @@
       "max": 10,
       "faction": "Alliance",
       "continent": "EK",
-      "note": "Startzon för dvärgar och gnomer."
+      "note": "Startzon för dvärgar och gnomer.",
+      "uiMap": 1426
     },
     {
       "name": "Teldrassil",
@@ -678,7 +709,8 @@
       "max": 10,
       "faction": "Alliance",
       "continent": "KAL",
-      "note": "Startzon för nattalver."
+      "note": "Startzon för nattalver.",
+      "uiMap": 1438
     },
     {
       "name": "Durotar",
@@ -686,7 +718,8 @@
       "max": 10,
       "faction": "Horde",
       "continent": "KAL",
-      "note": "Startzon för orcher och troll."
+      "note": "Startzon för orcher och troll.",
+      "uiMap": 1411
     },
     {
       "name": "Mulgore",
@@ -694,7 +727,8 @@
       "max": 10,
       "faction": "Horde",
       "continent": "KAL",
-      "note": "Startzon för tauren."
+      "note": "Startzon för tauren.",
+      "uiMap": 1412
     },
     {
       "name": "Tirisfal Glades",
@@ -702,7 +736,8 @@
       "max": 10,
       "faction": "Horde",
       "continent": "EK",
-      "note": "Startzon för odöda."
+      "note": "Startzon för odöda.",
+      "uiMap": 1420
     },
     {
       "name": "Westfall",
@@ -710,7 +745,8 @@
       "max": 20,
       "faction": "Alliance",
       "continent": "EK",
-      "note": ""
+      "note": "",
+      "uiMap": 1436
     },
     {
       "name": "Loch Modan",
@@ -718,7 +754,8 @@
       "max": 20,
       "faction": "Alliance",
       "continent": "EK",
-      "note": ""
+      "note": "",
+      "uiMap": 1432
     },
     {
       "name": "Darkshore",
@@ -726,7 +763,8 @@
       "max": 20,
       "faction": "Alliance",
       "continent": "KAL",
-      "note": ""
+      "note": "",
+      "uiMap": 1439
     },
     {
       "name": "The Barrens",
@@ -734,7 +772,8 @@
       "max": 25,
       "faction": "Horde",
       "continent": "KAL",
-      "note": "Hordens stora levlingszon."
+      "note": "Hordens stora levlingszon.",
+      "uiMap": 1413
     },
     {
       "name": "Silverpine Forest",
@@ -742,7 +781,8 @@
       "max": 20,
       "faction": "Horde",
       "continent": "EK",
-      "note": ""
+      "note": "",
+      "uiMap": 1421
     },
     {
       "name": "Redridge Mountains",
@@ -750,7 +790,8 @@
       "max": 25,
       "faction": "Alliance",
       "continent": "EK",
-      "note": ""
+      "note": "",
+      "uiMap": 1433
     },
     {
       "name": "Stonetalon Mountains",
@@ -758,7 +799,8 @@
       "max": 27,
       "faction": "Both",
       "continent": "KAL",
-      "note": ""
+      "note": "",
+      "uiMap": 1442
     },
     {
       "name": "Ashenvale",
@@ -766,7 +808,8 @@
       "max": 30,
       "faction": "Both",
       "continent": "KAL",
-      "note": ""
+      "note": "",
+      "uiMap": 1440
     },
     {
       "name": "Duskwood",
@@ -774,7 +817,8 @@
       "max": 30,
       "faction": "Alliance",
       "continent": "EK",
-      "note": ""
+      "note": "",
+      "uiMap": 1431
     },
     {
       "name": "Wetlands",
@@ -782,7 +826,8 @@
       "max": 30,
       "faction": "Alliance",
       "continent": "EK",
-      "note": ""
+      "note": "",
+      "uiMap": 1437
     },
     {
       "name": "Hillsbrad Foothills",
@@ -790,7 +835,8 @@
       "max": 30,
       "faction": "Both",
       "continent": "EK",
-      "note": ""
+      "note": "",
+      "uiMap": 1424
     },
     {
       "name": "Thousand Needles",
@@ -798,7 +844,8 @@
       "max": 35,
       "faction": "Both",
       "continent": "KAL",
-      "note": ""
+      "note": "",
+      "uiMap": 1441
     },
     {
       "name": "Alterac Mountains",
@@ -806,7 +853,8 @@
       "max": 40,
       "faction": "Both",
       "continent": "EK",
-      "note": ""
+      "note": "",
+      "uiMap": 1416
     },
     {
       "name": "Arathi Highlands",
@@ -814,7 +862,8 @@
       "max": 40,
       "faction": "Both",
       "continent": "EK",
-      "note": ""
+      "note": "",
+      "uiMap": 1417
     },
     {
       "name": "Desolace",
@@ -822,7 +871,8 @@
       "max": 40,
       "faction": "Both",
       "continent": "KAL",
-      "note": ""
+      "note": "",
+      "uiMap": 1443
     },
     {
       "name": "Stranglethorn Vale",
@@ -830,7 +880,8 @@
       "max": 45,
       "faction": "Both",
       "continent": "EK",
-      "note": "Mycket PvP på PvP-servrar."
+      "note": "Mycket PvP på PvP-servrar.",
+      "uiMap": 1434
     },
     {
       "name": "Dustwallow Marsh",
@@ -838,7 +889,8 @@
       "max": 45,
       "faction": "Both",
       "continent": "KAL",
-      "note": ""
+      "note": "",
+      "uiMap": 1445
     },
     {
       "name": "Badlands",
@@ -846,7 +898,8 @@
       "max": 45,
       "faction": "Both",
       "continent": "EK",
-      "note": ""
+      "note": "",
+      "uiMap": 1418
     },
     {
       "name": "Swamp of Sorrows",
@@ -854,7 +907,8 @@
       "max": 45,
       "faction": "Both",
       "continent": "EK",
-      "note": ""
+      "note": "",
+      "uiMap": 1435
     },
     {
       "name": "Feralas",
@@ -862,7 +916,8 @@
       "max": 50,
       "faction": "Both",
       "continent": "KAL",
-      "note": ""
+      "note": "",
+      "uiMap": 1444
     },
     {
       "name": "Tanaris",
@@ -870,7 +925,8 @@
       "max": 50,
       "faction": "Both",
       "continent": "KAL",
-      "note": ""
+      "note": "",
+      "uiMap": 1446
     },
     {
       "name": "The Hinterlands",
@@ -878,7 +934,8 @@
       "max": 50,
       "faction": "Both",
       "continent": "EK",
-      "note": ""
+      "note": "",
+      "uiMap": 1425
     },
     {
       "name": "Searing Gorge",
@@ -886,7 +943,8 @@
       "max": 50,
       "faction": "Both",
       "continent": "EK",
-      "note": ""
+      "note": "",
+      "uiMap": 1427
     },
     {
       "name": "Azshara",
@@ -894,7 +952,8 @@
       "max": 55,
       "faction": "Both",
       "continent": "KAL",
-      "note": ""
+      "note": "",
+      "uiMap": 1447
     },
     {
       "name": "Blasted Lands",
@@ -902,7 +961,8 @@
       "max": 55,
       "faction": "Both",
       "continent": "EK",
-      "note": ""
+      "note": "",
+      "uiMap": 1419
     },
     {
       "name": "Un'Goro Crater",
@@ -910,7 +970,8 @@
       "max": 55,
       "faction": "Both",
       "continent": "KAL",
-      "note": ""
+      "note": "",
+      "uiMap": 1449
     },
     {
       "name": "Felwood",
@@ -918,7 +979,8 @@
       "max": 55,
       "faction": "Both",
       "continent": "KAL",
-      "note": ""
+      "note": "",
+      "uiMap": 1448
     },
     {
       "name": "Burning Steppes",
@@ -926,7 +988,8 @@
       "max": 58,
       "faction": "Both",
       "continent": "EK",
-      "note": ""
+      "note": "",
+      "uiMap": 1428
     },
     {
       "name": "Western Plaguelands",
@@ -934,7 +997,8 @@
       "max": 58,
       "faction": "Both",
       "continent": "EK",
-      "note": ""
+      "note": "",
+      "uiMap": 1422
     },
     {
       "name": "Winterspring",
@@ -942,7 +1006,8 @@
       "max": 60,
       "faction": "Both",
       "continent": "KAL",
-      "note": ""
+      "note": "",
+      "uiMap": 1452
     },
     {
       "name": "Eastern Plaguelands",
@@ -950,7 +1015,8 @@
       "max": 60,
       "faction": "Both",
       "continent": "EK",
-      "note": ""
+      "note": "",
+      "uiMap": 1423
     },
     {
       "name": "Silithus",
@@ -958,7 +1024,56 @@
       "max": 60,
       "faction": "Both",
       "continent": "KAL",
-      "note": ""
+      "note": "",
+      "uiMap": 1451
+    },
+    {
+      "name": "Zephras Isle",
+      "min": 1,
+      "max": 12,
+      "faction": "Both",
+      "continent": null,
+      "uiMap": null,
+      "note": "Startzon för Skyborne.",
+      "new": true,
+      "verified": false,
+      "source": "Communityguider före lansering (Icy Veins, Maxroll m.fl.). Kontrollera i spelet med /fg atlas."
+    },
+    {
+      "name": "The Riverglades",
+      "min": 35,
+      "max": 45,
+      "faction": "Both",
+      "continent": "EK",
+      "uiMap": null,
+      "note": "Ny zon med över 150 nya uppdrag. Källor anger 35–45 eller 36–44.",
+      "new": true,
+      "verified": false,
+      "source": "Communityguider före lansering (Icy Veins, Maxroll m.fl.). Kontrollera i spelet med /fg atlas."
+    },
+    {
+      "name": "Shen'dralas",
+      "min": 40,
+      "max": 53,
+      "faction": "Both",
+      "continent": "KAL",
+      "uiMap": null,
+      "note": "Ruinerna mellan Mulgore och Desolace. Källor anger 40–45 eller 45–53.",
+      "new": true,
+      "verified": false,
+      "source": "Communityguider före lansering (Icy Veins, Maxroll m.fl.). Kontrollera i spelet med /fg atlas."
+    },
+    {
+      "name": "Mount Hyjal",
+      "min": 60,
+      "max": 60,
+      "faction": "Both",
+      "continent": "KAL",
+      "uiMap": null,
+      "note": "Slutspelszon efter Archimondes nederlag.",
+      "new": true,
+      "verified": false,
+      "source": "Communityguider före lansering (Icy Veins, Maxroll m.fl.). Kontrollera i spelet med /fg atlas."
     }
   ],
   "dungeons": [
@@ -1066,6 +1181,83 @@
       "max": 60,
       "faction": "Both",
       "continent": "EK"
+    },
+    {
+      "name": "Hall of Thanes",
+      "min": 13,
+      "max": 18,
+      "faction": "Both",
+      "continent": null,
+      "new": true,
+      "verified": false,
+      "source": "Communityguider före lansering (Icy Veins, Maxroll m.fl.). Kontrollera i spelet med /fg atlas.",
+      "note": ""
+    },
+    {
+      "name": "Ruins of Lordaeron",
+      "min": 15,
+      "max": 20,
+      "faction": "Both",
+      "continent": "EK",
+      "new": true,
+      "verified": false,
+      "source": "Communityguider före lansering (Icy Veins, Maxroll m.fl.). Kontrollera i spelet med /fg atlas.",
+      "note": ""
+    },
+    {
+      "name": "Whelgar's Excavation Site",
+      "min": 24,
+      "max": 29,
+      "faction": "Both",
+      "continent": "EK",
+      "new": true,
+      "verified": false,
+      "source": "Communityguider före lansering (Icy Veins, Maxroll m.fl.). Kontrollera i spelet med /fg atlas.",
+      "note": ""
+    },
+    {
+      "name": "The Drowned City",
+      "min": 35,
+      "max": 40,
+      "faction": "Both",
+      "continent": null,
+      "new": true,
+      "verified": false,
+      "source": "Communityguider före lansering (Icy Veins, Maxroll m.fl.). Kontrollera i spelet med /fg atlas.",
+      "note": ""
+    },
+    {
+      "name": "Krol'dok Stronghold",
+      "min": 40,
+      "max": 45,
+      "faction": "Both",
+      "continent": null,
+      "new": true,
+      "verified": false,
+      "source": "Communityguider före lansering (Icy Veins, Maxroll m.fl.). Kontrollera i spelet med /fg atlas.",
+      "note": "Källor anger 40–45 eller 40–55."
+    },
+    {
+      "name": "Blackmaw Hold",
+      "min": 55,
+      "max": 60,
+      "faction": "Both",
+      "continent": null,
+      "new": true,
+      "verified": false,
+      "source": "Communityguider före lansering (Icy Veins, Maxroll m.fl.). Kontrollera i spelet med /fg atlas.",
+      "note": ""
+    },
+    {
+      "name": "Shaper's Terrace",
+      "min": 58,
+      "max": 60,
+      "faction": "Both",
+      "continent": null,
+      "new": true,
+      "verified": false,
+      "source": "Communityguider före lansering (Icy Veins, Maxroll m.fl.). Kontrollera i spelet med /fg atlas.",
+      "note": ""
     }
   ],
   "startZones": {
@@ -1076,7 +1268,8 @@
     "Orc": "Durotar",
     "Troll": "Durotar",
     "Tauren": "Mulgore",
-    "Scourge": "Tirisfal Glades"
+    "Scourge": "Tirisfal Glades",
+    "Skyborne": "Zephras Isle"
   },
   "milestones": [
     {
@@ -1968,7 +2161,41 @@
       }
     ]
   },
-  "professionNotes": "Rangkrav och samlingsnivåer från 2004. Föremåls-ID används för AH-priser; kontrollera dem mot spelet."
+  "professionNotes": "Rangkrav och samlingsnivåer från 2004. Föremåls-ID används för AH-priser; kontrollera dem mot spelet.",
+  "raids": [
+    {
+      "name": "Hyjal Summit",
+      "players": 20,
+      "opens": "2026-12-09",
+      "new": true,
+      "verified": false,
+      "source": "Communityguider före lansering (Icy Veins, Maxroll m.fl.). Kontrollera i spelet med /fg atlas."
+    },
+    {
+      "name": "The Barrow Deeps",
+      "players": 10,
+      "opens": "2026-12-09",
+      "new": true,
+      "verified": false,
+      "source": "Communityguider före lansering (Icy Veins, Maxroll m.fl.). Kontrollera i spelet med /fg atlas."
+    }
+  ],
+  "otherMaps": [
+    "Stormwind City",
+    "Ironforge",
+    "Darnassus",
+    "Orgrimmar",
+    "Thunder Bluff",
+    "Undercity",
+    "Moonglade",
+    "Deadwind Pass",
+    "Alterac Valley",
+    "Warsong Gulch",
+    "Arathi Basin",
+    "Kalimdor",
+    "Eastern Kingdoms",
+    "Azeroth"
+  ]
 };
   data.changelog = [
   {

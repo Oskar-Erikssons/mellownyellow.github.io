@@ -39,12 +39,21 @@
     return out.sort((x, y) => y.score - x.score);
   }
 
+  // Skyborne can join either faction, and some of its classes depend on the faction.
+  function raceCanBe(raceId, classId, faction) {
+    const r = RACES[raceId];
+    if (!r || !r.classes.includes(classId)) return false;
+    const want = faction && faction !== "any" ? faction : null;
+    if (want && r.faction !== "Both" && r.faction !== want) return false;
+    const only = (r.classFaction || {})[classId];
+    return !(only && want && only !== want);
+  }
+
   function scoreRaces(classId, a) {
     const fit = RACE_FIT[classId] || {};
     const out = [];
     for (const [id, r] of Object.entries(RACES)) {
-      if (!r.classes.includes(classId)) continue;
-      if (a.faction && a.faction !== "any" && r.faction !== a.faction) continue;
+      if (!raceCanBe(id, classId, a.faction)) continue;
       const pve = (fit.pve || {})[id] ?? 3;
       const pvp = (fit.pvp || {})[id] ?? 3;
       let score = a.focus === "pvp" ? pvp * 2 + pve : a.focus === "pve" ? pve * 2 + pvp : pve + pvp;
@@ -288,25 +297,38 @@
 
   // ---------- Leveling route ----------
 
-  const factionOf = (race) => (RACES[race] || {}).faction;
+  // A race's faction, or the one you picked for a race that can be either.
+  function factionOf(race, picked, classId) {
+    const r = RACES[race] || {};
+    if (r.faction !== "Both") return r.faction;
+    return (r.classFaction || {})[classId] || picked || "Alliance";
+  }
   const fits = (z, faction) => z.faction === "Both" || z.faction === faction;
 
   // Steps of about five levels: where to quest, which dungeons fit and what to do at the trainer.
-  function planRoute(race, classId, from = 1, to = 60) {
-    const faction = factionOf(race);
+  function planRoute(race, classId, from = 1, to = 60, pickedFaction) {
+    const faction = factionOf(race, pickedFaction, classId);
     if (!faction) return [];
     const start = DATA.startZones[race];
     let continent = (DATA.zones.find((z) => z.name === start) || {}).continent;
     const steps = [];
+    // The first step lasts as long as the start zone does (1-9 for the old races, longer on Zephras Isle).
+    const startMax = (DATA.zones.find((z) => z.name === start) || { max: 10 }).max;
     for (let lo = from, hi; lo <= to; lo = hi + 1) {
-      hi = Math.min(to, lo < 10 ? 9 : lo + 4);
+      hi = Math.min(to, lo < startMax ? startMax - 1 : lo + 4);
       const mid = (lo + hi) / 2;
-      let zones = lo < 10 && start
+      let zones = lo < startMax && start
         ? DATA.zones.filter((z) => z.name === start)
-        : DATA.zones.filter((z) => fits(z, faction) && z.min <= mid && z.max >= mid && z.max > z.min && z.min > 1);
+        : DATA.zones.filter((z) => fits(z, faction) && z.min <= Math.max(mid, lo) && z.max >= Math.min(mid, hi) && z.min > 1);
       // Stay on the same continent when possible: less travel time.
       zones.sort((a, b) => (b.continent === continent) - (a.continent === continent) || Math.abs((a.min + a.max) / 2 - mid) - Math.abs((b.min + b.max) / 2 - mid));
       zones = zones.slice(0, 3);
+      // Zones new in Forever are always shown in the steps they fit, so you never miss them.
+      if (lo >= startMax) {
+        for (const z of DATA.zones) {
+          if (z.new && z.min > 1 && fits(z, faction) && z.min <= hi && z.max >= lo && !zones.includes(z)) zones.push(z);
+        }
+      }
       if (zones[0]) continent = zones[0].continent;
       const dungeons = DATA.dungeons.filter((d) => fits(d, faction) && d.min <= hi && d.max >= lo + 2);
       const milestones = DATA.milestones.filter((m) => m.level >= lo && m.level <= hi && (m.class === "ALL" || m.class === classId));
@@ -418,7 +440,7 @@
       .sort((a, b) => (b.can - a.can) || ((b.market || 0) - (a.market || 0)) || (a.skill - b.skill));
   }
 
-  const api = { inventoryWorth, nextRank, gatherList, planRoute, parseTalents, canAdd, canRemove, applyTemplate, pointsAt, DATA, CLASSES, RACES, RACE_FIT, RATES, decideSale, vendorFlips, money, scoreClasses, scoreRaces, parseExport, runSim, compareRaces, spellResult, meleeDPS, rangedDPS };
+  const api = { raceCanBe, factionOf, inventoryWorth, nextRank, gatherList, planRoute, parseTalents, canAdd, canRemove, applyTemplate, pointsAt, DATA, CLASSES, RACES, RACE_FIT, RATES, decideSale, vendorFlips, money, scoreClasses, scoreRaces, parseExport, runSim, compareRaces, spellResult, meleeDPS, rangedDPS };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.ForeverGuide = api;
 })(typeof window !== "undefined" ? window : globalThis);
