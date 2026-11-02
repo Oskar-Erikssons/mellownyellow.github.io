@@ -147,13 +147,14 @@ function Trainer:Record()
     local _, class = UnitClass("player")
     local list = {}
     for i = 1, GetNumTrainerServices() do
-        local name, rank, category = GetTrainerServiceInfo(i)
-        if name and category ~= "header" then
+        -- Forever's client returns: name, type ("available", "unavailable", "used" or "header"),
+        -- icon, required level and rank text (checked against Blizzard_TrainerUI on the forever branch).
+        local name, serviceType, _, reqLevel, rank = GetTrainerServiceInfo(i)
+        if name and serviceType ~= "header" then
             table.insert(list, {
-                name = name, rank = rank,
-                level = GetTrainerServiceLevelReq and GetTrainerServiceLevelReq(i) or 0,
+                name = name, rank = rank, level = reqLevel or 0,
                 cost = GetTrainerServiceCost and GetTrainerServiceCost(i) or 0,
-                known = category == "used",
+                known = serviceType == "used",
             })
         end
     end

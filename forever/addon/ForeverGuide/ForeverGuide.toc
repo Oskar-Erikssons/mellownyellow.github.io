@@ -2,11 +2,13 @@
 ## Title: Forever Guide
 ## Notes: Quest narrator, simulator, leveling route, talents, professions, inventory and auction advice for WoW: Forever. Sends no data.
 ## Author: Oskar Eriksson
-## Version: 0.6.0
+## Version: 0.7.0
 ## SavedVariables: ForeverGuideDB
 ## OptionalDeps: ForeverGuide_Voices
 
 Core.lua
+ApiList.lua
+Diagnostics.lua
 GameData.lua
 Theme.lua
 Narrator.lua

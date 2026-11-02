@@ -1,0 +1,36 @@
+name: Forever Guide
+
+on:
+  push:
+    paths: ["forever/**", ".github/workflows/forever-guide.yml"]
+  pull_request:
+    paths: ["forever/**"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: forever
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install test tools
+        run: pip install lupa numpy soundfile requests
+      - name: Unit, tool and full-session tests (Lua 5.1, Python, Node)
+        run: |
+          python -m unittest discover tests
+          node --test tests/app.test.js
+      - name: Check every API call against the WoW Forever client code
+        run: python tools/api_check.py
+      - name: Build the addon zip
+        run: python tools/package.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ForeverGuide
+          path: forever/dist/*.zip

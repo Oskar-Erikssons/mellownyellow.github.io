@@ -96,7 +96,9 @@ function Narrator:Speak(kind, rawText, questID)
     local mode = FG.settings.mode
 
     if mode ~= "builtin" and clips()[key] then
-        local willPlay, handle = PlaySoundFile(SOUND_DIR .. key .. ".ogg", "Dialog")
+        -- PlaySoundFile is not in Blizzard's API documentation, so check it exists before use.
+        local willPlay, handle
+        if PlaySoundFile then willPlay, handle = PlaySoundFile(SOUND_DIR .. key .. ".ogg", "Dialog") end
         if willPlay then
             current.handle = handle
             return
@@ -168,7 +170,7 @@ end
 
 function Narrator:Stop()
     if current.handle then
-        StopSound(current.handle)
+        if StopSound then StopSound(current.handle) end
         current.handle = nil
     end
     if C_VoiceChat and C_VoiceChat.StopSpeakingText then

@@ -56,8 +56,7 @@ end
 
 local function itemStats(link)
     if not link then return nil end
-    if C_Item and C_Item.GetItemStats then return C_Item.GetItemStats(link) end
-    return GetItemStats and GetItemStats(link)
+    return C_Item.GetItemStats and C_Item.GetItemStats(link)
 end
 
 -- Stat weights change with gear and level, so refresh them out of combat.

@@ -132,6 +132,28 @@ function Sim.ParseDescription(desc)
     return kind, lo and toNumber(lo) or 0, hi and toNumber(hi) or 0, dot and toNumber(dot) or 0, dur and tonumber(dur) or 0
 end
 
+-- Pure: seconds of cooldown in a tooltip line like "8 sec cooldown" or "2 min cooldown".
+function Sim.ParseCooldown(text)
+    if not text then return nil end
+    local n, unit = text:lower():match("([%d%.]+)%s*(%a+)%s+cooldown")
+    n = tonumber(n)
+    if not n then return nil end
+    if unit:find("^min") then return n * 60 end
+    if unit:find("^hr") or unit:find("^hour") then return n * 3600 end
+    return n
+end
+
+-- Forever has no GetSpellBaseCooldown, so read the cooldown from the spell's own tooltip.
+function Sim.Cooldown(spellID)
+    if GetSpellBaseCooldown then return (GetSpellBaseCooldown(spellID) or 0) / 1000 end
+    local data = C_TooltipInfo and C_TooltipInfo.GetSpellByID and C_TooltipInfo.GetSpellByID(spellID)
+    for _, line in ipairs(data and data.lines or {}) do
+        local cd = Sim.ParseCooldown(FG.Safe(line.rightText)) or Sim.ParseCooldown(FG.Safe(line.leftText))
+        if cd then return cd end
+    end
+    return 0
+end
+
 function Sim:ReadSpells()
     local list, seen = {}, {}
     eachSpell(function(id)
@@ -147,7 +169,7 @@ function Sim:ReadSpells()
             min = lo, max = hi,
             dot = dot, dur = dur,
             cast = (castTime or 0) / 1000,
-            cd = (GetSpellBaseCooldown and GetSpellBaseCooldown(id) or 0) / 1000,
+            cd = Sim.Cooldown(id),
             cost = manaCost(id),
         })
     end)

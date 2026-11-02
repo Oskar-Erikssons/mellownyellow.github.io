@@ -165,7 +165,7 @@ end
 ------------------------------------------------------------------------
 
 -- Forever uses the modern C_AuctionHouse API (with copper prices and 2/8/24 hour auctions).
--- The classic API is kept as a fallback in case a client lacks it.
+-- The classic auction API does not exist in Forever's client, so it is not used at all.
 local modern = C_AuctionHouse and C_AuctionHouse.ReplicateItems ~= nil
 local BATCH = 400 -- listings handled per frame, so a big scan never freezes the game
 Auction.scanning = false
@@ -179,10 +179,7 @@ function Auction:CanFullScan()
     local wait = (a.lastRequest or a.lastFull or 0) + FG.Data.auction.fullScanCooldown - time()
     if wait > 0 then return false, string.format("Next full scan in %d min %d s.", math.floor(wait / 60), wait % 60) end
     if self.scanning then return false, "A scan is already running." end
-    if not modern and CanSendAuctionQuery then
-        local _, canAll = CanSendAuctionQuery()
-        if not canAll then return false, "The server does not allow a full scan right now." end
-    end
+    if not modern then return false, "This client has no auction house API." end
     return true
 end
 
@@ -192,11 +189,7 @@ function Auction:FullScan()
     self.scanning = "full"
     self:DB().lastRequest = time()
     FG:Print("Full scan started. Keep the auction house open; it can take a minute.")
-    if modern then
-        C_AuctionHouse.ReplicateItems()
-    else
-        QueryAuctionItems("", nil, nil, 0, nil, nil, true)
-    end
+    C_AuctionHouse.ReplicateItems()
 end
 
 -- Quick scan: an empty browse search lists the lowest price and quantity of every item.
@@ -215,20 +208,16 @@ end
 
 -- Reads listing i of the finished full scan. Returns itemID, count, buyout, timeLeft (1-4), owner.
 local function readListing(i)
-    if modern then
-        local _, _, count, _, _, _, _, _, _, buyout, _, _, _, owner, _, _, itemID = C_AuctionHouse.GetReplicateItemInfo(i)
-        local tl = C_AuctionHouse.GetReplicateItemTimeLeft and C_AuctionHouse.GetReplicateItemTimeLeft(i)
-        return itemID, count, buyout, tl and tl + 1, owner
-    end
-    local _, _, count, _, _, _, _, _, _, buyout, _, _, _, owner, _, _, itemID = GetAuctionItemInfo("list", i)
-    return itemID, count, buyout, GetAuctionItemTimeLeft("list", i), owner
+    local _, _, count, _, _, _, _, _, _, buyout, _, _, _, owner, _, _, itemID = C_AuctionHouse.GetReplicateItemInfo(i)
+    local tl = C_AuctionHouse.GetReplicateItemTimeLeft and C_AuctionHouse.GetReplicateItemTimeLeft(i)
+    return itemID, count, buyout, tl and tl + 1, owner
 end
 
 -- Reads all listings a few hundred per frame, then calls done(byItem, total).
 -- Listings whose item the client does not know are skipped (a known server glitch).
 function Auction:ReadFullScan(done)
-    local first = modern and 0 or 1
-    local total = modern and C_AuctionHouse.GetNumReplicateItems() or GetNumAuctionItems("list")
+    local first = 0 -- replicate indexes start at 0
+    local total = C_AuctionHouse.GetNumReplicateItems()
     local last = first + total - 1
     local byItem, i = {}, first
     local exists = C_Item and C_Item.DoesItemExistByID
@@ -339,23 +328,6 @@ function Auction:BrowseStep()
     self:DB().lastQuick = time()
     FG:Print(string.format("Quick scan done: %d items priced.", self.quickCount or 0))
     if FG.UI and FG.UI.RefreshAuction then FG.UI:RefreshAuction() end
-end
-
--- Passive capture with the classic API: every search page you look at updates prices.
-function Auction:CaptureClassicPage()
-    if self.scanning or not GetNumAuctionItems then return end
-    local now, byItem = time(), {}
-    for i = 1, GetNumAuctionItems("list") do
-        local _, _, count, _, _, _, _, _, _, buyout, _, _, _, _, _, _, itemID = GetAuctionItemInfo("list", i)
-        if itemID and buyout and buyout > 0 and count and count > 0 then
-            byItem[itemID] = byItem[itemID] or {}
-            table.insert(byItem[itemID], { unit = math.floor(buyout / count), count = count })
-        end
-    end
-    for id, list in pairs(byItem) do
-        local market, min, qty, n = Auction.Aggregate(list)
-        if market then self:Record(id, market, min, qty, n, now) end
-    end
 end
 
 ------------------------------------------------------------------------
@@ -546,9 +518,6 @@ FG:On("PLAYER_LOGIN", function()
     hookTooltips()
 end)
 FG:On("AUCTION_HOUSE_SHOW", function() if FG.UI then FG.UI:AttachAuction() end end)
-FG:On("AUCTION_ITEM_LIST_UPDATE", function()
-    if Auction.scanning == "full" and not modern then Auction:FinishFullScan() else Auction:CaptureClassicPage() end
-end)
 FG:On("REPLICATE_ITEM_LIST_UPDATE", function()
     if Auction.scanning == "full" then Auction:FinishFullScan() end
 end)

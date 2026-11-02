@@ -343,6 +343,8 @@ end
 
 function Market:SetTab(tab)
     self.tab = tab
+    -- Searches queued for the old tab are no longer needed; the new tab goes first.
+    self.queue.items = {}
     if tab == "sell" then self:BuildSellList()
     elseif tab == "cancel" then self:ScanOwned()
     elseif tab == "flips" then self:CheckFlip()

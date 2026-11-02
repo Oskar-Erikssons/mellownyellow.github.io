@@ -389,12 +389,15 @@ class NewModulesLuaTests(AddonLuaTests):
             FG_TEST_N = N
         """, n)
         self.lua.execute("""
-            GetNumAuctionItems = function() return FG_TEST_N end
-            GetAuctionItemInfo = function(_, i)
-                local id = (i % 3 == 0) and 666 or (100 + i % 5)
-                return nil, nil, 2, nil, nil, nil, nil, nil, nil, 200 + i, nil, nil, nil, "Seller", nil, nil, id
-            end
-            GetAuctionItemTimeLeft = function() return 4 end
+            C_AuctionHouse = {
+                GetNumReplicateItems = function() return FG_TEST_N end,
+                -- Replicate indexes start at 0, as in the client.
+                GetReplicateItemInfo = function(i)
+                    local id = (i % 3 == 0) and 666 or (100 + i % 5)
+                    return nil, nil, 2, nil, nil, nil, nil, nil, nil, 200 + i, nil, nil, nil, "Seller", nil, nil, id
+                end,
+                GetReplicateItemTimeLeft = function() return 3 end,
+            }
             C_Item = { DoesItemExistByID = function(id) return id ~= 666 end }
         """)
         steps = self.lua.eval("{ n = 0 }")
@@ -406,7 +409,8 @@ class NewModulesLuaTests(AddonLuaTests):
         self.assertEqual(got["total"], n)
         ids = sorted(k for k in got["byItem"].keys())
         self.assertNotIn(666, ids)
-        self.assertEqual(sum(len(got["byItem"][k]) for k in ids), n - n // 3)
+        unknown = len([i for i in range(n) if i % 3 == 0])
+        self.assertEqual(sum(len(got["byItem"][k]) for k in ids), n - unknown)
         self.assertGreaterEqual(self.lua.eval("FG_STEPS"), 2)  # more than one frame
         # Closing the AH mid-scan stops reading.
         A.scanning = False
@@ -547,6 +551,16 @@ class GeneratedDataTests(unittest.TestCase):
     def test_generated_files_are_current(self):
         import build_data
         self.assertEqual(build_data.main(["--check"]), 0)
+
+    def test_selftest_list_matches_the_code(self):
+        sys.path.insert(0, str(ROOT / "tools"))
+        import api_check
+        tmp = Path(tempfile.mkdtemp()) / "ApiList.lua"
+        try:
+            self.assertEqual(api_check.write_api_list(tmp), (ADDON / "ApiList.lua").read_text(encoding="utf-8"),
+                             "Run python tools/api_check.py --write-list")
+        finally:
+            shutil.rmtree(tmp.parent)
 
 
 if __name__ == "__main__":

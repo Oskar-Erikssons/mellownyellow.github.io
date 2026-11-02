@@ -3,7 +3,7 @@ local ADDON, FG = ...
 FG = FG or {}
 _G.ForeverGuide = FG
 
-FG.VERSION = "0.6.0"
+FG.VERSION = "0.7.0"
 
 -- WoW: Forever reports project 18 ("camelot") and a 1.6x build number.
 local build = select(4, GetBuildInfo())
@@ -59,7 +59,10 @@ end
 FG.events:SetScript("OnEvent", function(_, event, ...)
     for _, fn in ipairs(FG.handlers[event] or {}) do
         local ok, err = pcall(fn, ...)
-        if not ok then FG:Print("|cffff5555Error in " .. event .. ":|r " .. tostring(err)) end
+        if not ok then
+            FG:Print("|cffff5555Error in " .. event .. ":|r " .. tostring(err))
+            if FG.Diag then FG.Diag:Log(event, err) end
+        end
     end
 end)
 
@@ -147,6 +150,8 @@ local HELP = {
     "/fg prof - professions: next rank and what you can gather, by AH value",
     "/fg quick - quick auction scan (lowest prices, no 15-minute limit)",
     "/fg privacy - what Forever Guide stores and sends (nothing)",
+    "/fg selftest - check that everything Forever Guide uses exists in this game build",
+    "/fg report - text to copy if something goes wrong (nothing is sent)",
     "/fg atlas - zones and dungeons the game knows that Forever Guide does not (scan, export)",
     "/fg bags [on|off] - open Forever Bags; on/off: use it instead of the game's bags",
     "/fg queue [on|off] - smart spell queue that follows your latency",
@@ -192,6 +197,10 @@ SlashCmdList.FOREVERGUIDE = function(msg)
         FG.UI:ShowProfessions()
     elseif cmd == "quick" then
         FG.Auction:QuickScan()
+    elseif cmd == "selftest" then
+        FG.UI:ShowCopy("Forever Guide Self Test", FG.Diag:SelfTestText(FG.Diag:SelfTest()))
+    elseif cmd == "report" then
+        FG.UI:ShowCopy("Forever Guide Report", FG.Diag:Report())
     elseif cmd == "privacy" then
         FG:Print(FG.PRIVACY)
     elseif cmd == "bags" and (a == "on" or a == "off") then

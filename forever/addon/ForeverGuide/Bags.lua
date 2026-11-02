@@ -149,7 +149,8 @@ function Bags:Button(bag, slot)
     ok, b = pcall(CreateFrame, "ItemButton", name, holder, "ContainerFrameItemButtonTemplate")
     if not ok then b = CreateFrame("Button", name, holder, "ContainerFrameItemButtonTemplate") end
     b:SetID(slot)
-    b.bagID = bag
+    -- Blizzard sets the bag through an attribute so item use stays untainted; do the same.
+    if b.SetBagID then b:SetBagID(bag) end
     b:SetSize(SIZE, SIZE)
     b.badge = b:CreateFontString(nil, "OVERLAY", "NumberFontNormalSmall")
     b.badge:SetPoint("TOPLEFT", 2, -2)

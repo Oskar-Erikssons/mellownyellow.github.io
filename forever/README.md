@@ -48,6 +48,8 @@ Kopiera båda mapparna i `addon/` till spelets `Interface/AddOns`.
 | `/fg prof` | Yrken: nästa rang och vad du kan samla, sorterat efter AH-värde. |
 | `/fg quick` | Snabbskanning av AH: lägsta pris för allt, utan 15-minutersgräns. |
 | `/fg privacy` | Visar vad addonen sparar och skickar (ingenting). |
+| `/fg selftest` | Kontrollerar att allt addonen använder finns i din spelversion. |
+| `/fg report` | Text att kopiera om något går fel. Inget skickas. |
 | `/fg atlas` | Zoner och instanser som spelet känner till men som saknas i datan. `/fg atlas export` ger text till `atlas_import.py`. |
 | `/fg bags [on\|off]` | Forever Bags. `on`/`off` styr om den ersätter spelets väskor. |
 | `/fg queue [on\|off]` | Smart spell queue som följer din ping och klass. |
@@ -179,6 +181,16 @@ python blizzard_fetch.py character --realm din-realm --name Oskar
 
 Skriptet använder namespace för Classic Era (`classic1x`). Blizzard har inte sagt vilken namespace Forever får. Ändra `--flavor` när den är känd.
 
+## Kvalitet: så kontrolleras addonen
+
+Tre lager, eftersom addonen inte kan provas i spelet automatiskt:
+
+1. **Mot Forevers egen klientkod.** `python tools/api_check.py` hämtar grenen `forever` av Blizzards gränssnitt (spegeln wow-ui-source) och kontrollerar varje API-anrop, händelse, Enum-värde och mall. Den hittade bland annat att Forever använder det moderna talangsystemet (`C_Traits`), att tränarens returvärden har en annan ordning och att väskknappens ID måste sättas via `SetBagID` för att undvika taint.
+2. **En hel spelsession i en stand-in-klient.** `tests/test_smoke.py` laddar alla filer i TOC-ordning och kör inloggning, alla `/fg`-kommandon, quest-dialoger, väskor, bank, post, tränare, talanger och en hel AH-runda.
+3. **I det riktiga spelet.** `/fg selftest` kontrollerar allt addonen använder i din klient. `/fg report` ger text att kopiera om något går fel. Se `TESTPLAN.md`.
+
+GitHub Actions (`.github/workflows/forever-guide.yml`) kör allt vid varje push och bygger `ForeverGuide-<version>.zip`. Lokalt: `python tools/package.py`.
+
 ## Tester
 
 ```bash
@@ -194,7 +206,7 @@ node --test tests/app.test.js          # webbsidans beräkningar
 - Klasser, raser och racials följer 2004. Kontrollera dem om Blizzard ändrar något i Forever.
 - Nya ljudfiler syns först när spelet har startats om.
 - AH-avgifterna för neutrala auktionshus är osäkra. De ligger i `data/gamedata.json` och kan rättas där.
-- Det är oklart om Forever använder det moderna eller det klassiska auktions-API:et. Addonen stöder båda.
+- Forever använder det moderna auktions-API:et (kontrollerat mot klientkoden); det klassiska är borttaget.
 
 ## Inspiration
 
